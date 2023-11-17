@@ -1,3 +1,26 @@
+## rcutils (iron) - 6.2.2-2
+
+The packages in the `rcutils` repository were released into the `iron` distro by running `/usr/bin/bloom-release --rosdistro iron rcutils` on `Fri, 17 Nov 2023 03:55:51 -0000`
+
+The `rcutils` package was released.
+
+Version of package(s) in repository `rcutils`:
+
+- upstream repository: https://github.com/ros2/rcutils.git
+- release repository: https://github.com/ros2-gbp/rcutils-release.git
+- rosdistro version: `6.2.1-2`
+- old version: `6.2.2-1`
+- new version: `6.2.2-2`
+
+Versions of tools used:
+
+- bloom version: `0.11.2`
+- catkin_pkg version: `0.5.2`
+- rosdep version: `0.22.2`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## rcutils (iron) - 6.2.2-1
 
 The packages in the `rcutils` repository were released into the `iron` distro by running `/usr/bin/bloom-release --rosdistro iron rcutils` on `Fri, 17 Nov 2023 03:52:29 -0000`
