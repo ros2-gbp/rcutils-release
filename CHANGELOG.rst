@@ -2,10 +2,29 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.2.2 (2023-11-17)
+6.5.0 (2023-12-26)
 ------------------
-* memmove for overlaping memory (`#436 <https://github.com/ros2/rcutils/issues/436>`_)
+* Remove two last uses of ament_target_dependencies. (`#440 <https://github.com/ros2/rcutils/issues/440>`_)
+* time_win32: Update dead link (`#438 <https://github.com/ros2/rcutils/issues/438>`_)
+* Contributors: Chris Lalancette, Silvio Traversaro
+
+6.4.1 (2023-11-06)
+------------------
+* memmove for overlaping memory (`#434 <https://github.com/ros2/rcutils/issues/434>`_)
 * Contributors: Tyler Weaver
+
+6.4.0 (2023-10-04)
+------------------
+* make escape characters work (`#426 <https://github.com/ros2/rcutils/issues/426>`_)
+* Contributors: Chen Lihui
+
+6.3.1 (2023-09-07)
+------------------
+* Remove unused 'max' functions from sha256.c (`#429 <https://github.com/ros2/rcutils/issues/429>`_)
+* Contributors: Chris Lalancette
+
+6.3.0 (2023-04-27)
+------------------
 
 6.2.1 (2023-04-12)
 ------------------
