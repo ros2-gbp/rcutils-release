@@ -2,15 +2,68 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.2.3 (2024-04-19)
+6.7.1 (2024-04-24)
 ------------------
-* Fix if(TARGET ...) condition for test (`#449 <https://github.com/ros2/rcutils/issues/449>`_)
+* Removed warnings - strict-prototypes (`#461 <https://github.com/ros2/rcutils/issues/461>`_) (`#465 <https://github.com/ros2/rcutils/issues/465>`_)
+* Increase timeout repl_str test (`#463 <https://github.com/ros2/rcutils/issues/463>`_) (`#464 <https://github.com/ros2/rcutils/issues/464>`_)
+* Contributors: mergify[bot]
+
+6.7.0 (2024-04-16)
+------------------
+* validate the allocator before use. (`#455 <https://github.com/ros2/rcutils/issues/455>`_)
+  * validate the allocator before use.
+  * address review comments.
+  - validate allocator only if the function specifically uses.
+  - argument null check comes before validation of value.
+  ---------
+* Contributors: Tomoya Fujita
+
+6.6.0 (2024-03-28)
+------------------
+* feat: Add human readable date to logging formats (`#441 <https://github.com/ros2/rcutils/issues/441>`_)
+* Updates for uncrustify 0.78. (`#454 <https://github.com/ros2/rcutils/issues/454>`_)
+* Set hints to find the python version we actually want. (`#451 <https://github.com/ros2/rcutils/issues/451>`_)
+* Bring ament_add_gtest/target_link_libraries back together (`#452 <https://github.com/ros2/rcutils/issues/452>`_)
+* Change 'ROS2' to 'ROS 2' in quality declaration (`#453 <https://github.com/ros2/rcutils/issues/453>`_)
+* Allow parsing of escape sequence in log format (`#443 <https://github.com/ros2/rcutils/issues/443>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Kaju-Bubanja, Marc Bestmann
+
+6.5.2 (2024-02-07)
+------------------
+* Clean up unused references to mimick/mocking in tests (`#450 <https://github.com/ros2/rcutils/issues/450>`_)
+* Fix if(TARGET ...) condition for test (`#447 <https://github.com/ros2/rcutils/issues/447>`_)
+* Zero-initialize rcutils_string_array_t in test_string_array (`#446 <https://github.com/ros2/rcutils/issues/446>`_)
+* Use rcutils_string_array_init in rcutils_split & handle alloc fail (`#445 <https://github.com/ros2/rcutils/issues/445>`_)
 * Contributors: Christophe Bedard
 
-6.2.2 (2023-11-17)
+6.5.1 (2024-01-24)
 ------------------
-* memmove for overlaping memory (`#436 <https://github.com/ros2/rcutils/issues/436>`_)
+* Make rcutils_split() return RCUTILS_RET_BAD_ALLOC if alloc fails (`#444 <https://github.com/ros2/rcutils/issues/444>`_)
+* Contributors: Christophe Bedard
+
+6.5.0 (2023-12-26)
+------------------
+* Remove two last uses of ament_target_dependencies. (`#440 <https://github.com/ros2/rcutils/issues/440>`_)
+* time_win32: Update dead link (`#438 <https://github.com/ros2/rcutils/issues/438>`_)
+* Contributors: Chris Lalancette, Silvio Traversaro
+
+6.4.1 (2023-11-06)
+------------------
+* memmove for overlaping memory (`#434 <https://github.com/ros2/rcutils/issues/434>`_)
 * Contributors: Tyler Weaver
+
+6.4.0 (2023-10-04)
+------------------
+* make escape characters work (`#426 <https://github.com/ros2/rcutils/issues/426>`_)
+* Contributors: Chen Lihui
+
+6.3.1 (2023-09-07)
+------------------
+* Remove unused 'max' functions from sha256.c (`#429 <https://github.com/ros2/rcutils/issues/429>`_)
+* Contributors: Chris Lalancette
+
+6.3.0 (2023-04-27)
+------------------
 
 6.2.1 (2023-04-12)
 ------------------
