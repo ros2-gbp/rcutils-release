@@ -1,3 +1,26 @@
+## rcutils (jazzy) - 6.7.1-1
+
+The packages in the `rcutils` repository were released into the `jazzy` distro by running `/usr/bin/bloom-release --track jazzy --rosdistro jazzy rcutils` on `Wed, 24 Apr 2024 17:01:55 -0000`
+
+The `rcutils` package was released.
+
+Version of package(s) in repository `rcutils`:
+
+- upstream repository: https://github.com/ros2/rcutils.git
+- release repository: https://github.com/ros2-gbp/rcutils-release.git
+- rosdistro version: `6.7.0-2`
+- old version: `6.7.0-2`
+- new version: `6.7.1-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.22.2`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## rcutils (iron) - 6.2.3-1
 
 The packages in the `rcutils` repository were released into the `iron` distro by running `/usr/bin/bloom-release --rosdistro iron rcutils` on `Fri, 19 Apr 2024 12:33:37 -0000`
