@@ -2,149 +2,31 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.8.0 (2024-04-26)
+5.1.6 (2024-05-15)
 ------------------
-* Removed warnings - strict-prototypes (`#461 <https://github.com/ros2/rcutils/issues/461>`_)
-* Increase timeout repl_str test (`#463 <https://github.com/ros2/rcutils/issues/463>`_)
-* Contributors: Alejandro Hernández Cordero
+* update cast to modern style (`#418 <https://github.com/ros2/rcutils/issues/418>`_) (`#462 <https://github.com/ros2/rcutils/issues/462>`_)
+* Contributors: mergify[bot]
 
-6.7.0 (2024-04-16)
+5.1.5 (2024-02-16)
 ------------------
-* validate the allocator before use. (`#455 <https://github.com/ros2/rcutils/issues/455>`_)
-  * validate the allocator before use.
-  * address review comments.
-  - validate allocator only if the function specifically uses.
-  - argument null check comes before validation of value.
-  ---------
-* Contributors: Tomoya Fujita
+* Fix if(TARGET ...) condition for test (`#447 <https://github.com/ros2/rcutils/issues/447>`_) (`#448 <https://github.com/ros2/rcutils/issues/448>`_)
+* Contributors: mergify[bot]
 
-6.6.0 (2024-03-28)
+5.1.4 (2023-11-13)
 ------------------
-* feat: Add human readable date to logging formats (`#441 <https://github.com/ros2/rcutils/issues/441>`_)
-* Updates for uncrustify 0.78. (`#454 <https://github.com/ros2/rcutils/issues/454>`_)
-* Set hints to find the python version we actually want. (`#451 <https://github.com/ros2/rcutils/issues/451>`_)
-* Bring ament_add_gtest/target_link_libraries back together (`#452 <https://github.com/ros2/rcutils/issues/452>`_)
-* Change 'ROS2' to 'ROS 2' in quality declaration (`#453 <https://github.com/ros2/rcutils/issues/453>`_)
-* Allow parsing of escape sequence in log format (`#443 <https://github.com/ros2/rcutils/issues/443>`_)
-* Contributors: Chris Lalancette, Christophe Bedard, Kaju-Bubanja, Marc Bestmann
+* memmove for overlaping memory (`#434 <https://github.com/ros2/rcutils/issues/434>`_) (`#437 <https://github.com/ros2/rcutils/issues/437>`_)
+* Contributors: mergify[bot]
 
-6.5.2 (2024-02-07)
+5.1.3 (2023-04-25)
 ------------------
-* Clean up unused references to mimick/mocking in tests (`#450 <https://github.com/ros2/rcutils/issues/450>`_)
-* Fix if(TARGET ...) condition for test (`#447 <https://github.com/ros2/rcutils/issues/447>`_)
-* Zero-initialize rcutils_string_array_t in test_string_array (`#446 <https://github.com/ros2/rcutils/issues/446>`_)
-* Use rcutils_string_array_init in rcutils_split & handle alloc fail (`#445 <https://github.com/ros2/rcutils/issues/445>`_)
-* Contributors: Christophe Bedard
+* avoid unnecessary copy for rcutils_char_array_vsprintf. (`#412 <https://github.com/ros2/rcutils/issues/412>`_) (`#413 <https://github.com/ros2/rcutils/issues/413>`_)
+* Contributors: mergify[bot]
 
-6.5.1 (2024-01-24)
+5.1.2 (2022-11-07)
 ------------------
-* Make rcutils_split() return RCUTILS_RET_BAD_ALLOC if alloc fails (`#444 <https://github.com/ros2/rcutils/issues/444>`_)
-* Contributors: Christophe Bedard
-
-6.5.0 (2023-12-26)
-------------------
-* Remove two last uses of ament_target_dependencies. (`#440 <https://github.com/ros2/rcutils/issues/440>`_)
-* time_win32: Update dead link (`#438 <https://github.com/ros2/rcutils/issues/438>`_)
-* Contributors: Chris Lalancette, Silvio Traversaro
-
-6.4.1 (2023-11-06)
-------------------
-* memmove for overlaping memory (`#434 <https://github.com/ros2/rcutils/issues/434>`_)
-* Contributors: Tyler Weaver
-
-6.4.0 (2023-10-04)
-------------------
-* make escape characters work (`#426 <https://github.com/ros2/rcutils/issues/426>`_)
-* Contributors: Chen Lihui
-
-6.3.1 (2023-09-07)
-------------------
-* Remove unused 'max' functions from sha256.c (`#429 <https://github.com/ros2/rcutils/issues/429>`_)
-* Contributors: Chris Lalancette
-
-6.3.0 (2023-04-27)
-------------------
-
-6.2.1 (2023-04-12)
-------------------
-* fix memory leak (`#423 <https://github.com/ros2/rcutils/issues/423>`_)
-* Contributors: Chen Lihui
-
-6.2.0 (2023-04-11)
-------------------
-* Add convenience error handling macros (`#421 <https://github.com/ros2/rcutils/issues/421>`_)
-* Calculate the next power-of-two for the user in hash_map_init. (`#420 <https://github.com/ros2/rcutils/issues/420>`_)
-* update cast to modern style (`#418 <https://github.com/ros2/rcutils/issues/418>`_)
-* Remove deprecated header get_env.h (`#417 <https://github.com/ros2/rcutils/issues/417>`_)
-* Updates to rcutils to make rosdoc2 generation happier. (`#416 <https://github.com/ros2/rcutils/issues/416>`_)
-* add RCUTILS_LOGGING_AUTOINIT_WITH_ALLOCATOR. (`#415 <https://github.com/ros2/rcutils/issues/415>`_)
-* Fix memory leak in string_map.c in rcutils (`#411 <https://github.com/ros2/rcutils/issues/411>`_)
-* avoid unnecessary copy for rcutils_char_array_vsprintf. (`#412 <https://github.com/ros2/rcutils/issues/412>`_)
-* Contributors: Chris Lalancette, Emerson Knapp, Mario Prats, Nikolai Morin, Tomoya Fujita, methylDragon
-
-6.1.1 (2023-02-24)
-------------------
-* Add missing stddef include for size_t (`#410 <https://github.com/ros2/rcutils/issues/410>`_)
-* Contributors: Emerson Knapp
-
-6.1.0 (2023-02-13)
-------------------
-* Add SHA256 utility implementation (`#408 <https://github.com/ros2/rcutils/issues/408>`_)
-* Upgrade rcutils to C++17. (`#392 <https://github.com/ros2/rcutils/issues/392>`_)
-* [rolling] Update maintainers - 2022-11-07 (`#404 <https://github.com/ros2/rcutils/issues/404>`_)
-* Contributors: Audrow Nash, Chris Lalancette, Emerson Knapp
-
-6.0.1 (2022-11-02)
-------------------
-* Fix build on OpenHarmony (`#395 <https://github.com/ros2/rcutils/issues/395>`_)
-* regression of thread-safety for logging macros (`#393 <https://github.com/ros2/rcutils/issues/393>`_)
-* add portable nonnull macros (`#382 <https://github.com/ros2/rcutils/issues/382>`_)
-* Fix memory leak when adding the same key to the logger hash map multiple times (`#391 <https://github.com/ros2/rcutils/issues/391>`_)
-* time_unix: uses ZEPHYR_VERSION_CODE instead (`#390 <https://github.com/ros2/rcutils/issues/390>`_)
-* Cleanup time_unix.c (`#389 <https://github.com/ros2/rcutils/issues/389>`_)
-* time_unix: namespace zephyr headers (`#383 <https://github.com/ros2/rcutils/issues/383>`_)
-* Restrict overmatching MACH ifdef to only trigger on OSX and Mach (`#386 <https://github.com/ros2/rcutils/issues/386>`_)
-* Contributors: AIxWall, Chris Lalancette, Felipe Neves, Jacob Perron, Maximilian Downey Twiss, William Woodall
-
-6.0.0 (2022-09-13)
-------------------
-* Optimize rcutils_logging_get_logger_effective_level() (`#381 <https://github.com/ros2/rcutils/issues/381>`_)
-* Change syntax __VAR_ARGS_\_ to __VA_ARGS_\_ (`#376 <https://github.com/ros2/rcutils/issues/376>`_)
-* Fix a bug in hash_map_get_next_key_and_data. (`#375 <https://github.com/ros2/rcutils/issues/375>`_)
-* More fixes from review.
-* Fixes from review.
-* Make g_rcutils_logging_output_handler static.
-* Make g_rcutils_logging_default_logger_level static.
-* Optimize rcutils_find_lastn where possible.
-* Don't bother computing the hash_map key if the hash map is empty.
-* Make sure to expand char_array by at least 1.5x.
-* Optimize index computation in hash_map_find.
-* Improve the performance of rcutils_logging_format_message. (`#372 <https://github.com/ros2/rcutils/issues/372>`_)
-* Get rid of unnecessary ret variable.
-* Get rid of unnecessary ifdef cplusplus checks in the C file.
-* Get rid of unnecessary rcutils_custom_add\_{gtest,gmock}
-* Get rid of unnecessary and unused RMW switching for logging tests.
-* Remove unnecessary IS_OUTPUT_COLORIZED macro.
-* Rename logging internal structures to use our new convention.
-* Make all of the logging 'expand' methods static.
-* Fix up error checking for RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED.
-* Cleanup error handling for the RCUTILS_CONSOLE_OUTPUT_FORMAT checks.
-* Revamp error handling in rcutils_logging_initialize_with_allocator.
-* Revamp rcutils_logging_initialize_with_allocator.
-* Make a few logging global variables static.
-* Optimize calls via the RCUTILS_LOG macros. (`#369 <https://github.com/ros2/rcutils/issues/369>`_)
-* time_unix: add zephyr posix time (`#368 <https://github.com/ros2/rcutils/issues/368>`_)
-* Optimize the implementation of rcutils_char_array_strncpy. (`#367 <https://github.com/ros2/rcutils/issues/367>`_)
-* strdup.c: fix arbitrary length overread (`#366 <https://github.com/ros2/rcutils/issues/366>`_)
-* Mirror rolling to master
-* strdup.c: fix 1 byte buffer overread (`#363 <https://github.com/ros2/rcutils/issues/363>`_)
-* Clarify duration arg description in logging macros (`#359 <https://github.com/ros2/rcutils/issues/359>`_)
-* Contributors: Abrar Rahman Protyasha, Audrow Nash, Chris Lalancette, Felipe Neves, Yakumoo, guijan
-
-5.2.0 (2022-04-29)
-------------------
-* Update rcutils_steady_time_now to return the same data as std::chrono (`#357 <https://github.com/ros2/rcutils/issues/357>`_)
-* Contributors: Chris Lalancette
+* Change syntax __VAR_ARGS_\_ to __VA_ARGS_\_ (`#376 <https://github.com/ros2/rcutils/issues/376>`_) (`#377 <https://github.com/ros2/rcutils/issues/377>`_)
+* Clarify duration arg description in logging macros (`#359 <https://github.com/ros2/rcutils/issues/359>`_) (`#360 <https://github.com/ros2/rcutils/issues/360>`_)
+* Contributors: mergify[bot]
 
 5.1.1 (2022-03-31)
 ------------------
