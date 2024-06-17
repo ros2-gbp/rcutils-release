@@ -193,17 +193,7 @@ TEST_F(TestTimeFixture, test_rcutils_steady_time_now) {
 
 #if !defined(_WIN32)
 
-// For mocking purposes
-#if defined(__MACH__)
-#include <mach/clock.h>
-#include <mach/mach.h>
-#define clock_gettime clock_get_time
-#endif
-
-// Tests rcutils_system_time_now() and rcutils_steady_time_now() functions
-// when system clocks misbehave.
 TEST_F(TestTimeFixture, test_rcutils_with_bad_system_clocks) {
-#if !defined (__MACH__)  // as tv_sec is an unsigned integer there
   {
     auto mock = mocking_utils::patch(
       "lib:rcutils", clock_gettime,
@@ -222,7 +212,6 @@ TEST_F(TestTimeFixture, test_rcutils_with_bad_system_clocks) {
     EXPECT_EQ(RCUTILS_RET_ERROR, ret);
     rcutils_reset_error();
   }
-#endif
   {
     auto mock = mocking_utils::patch(
       "lib:rcutils", clock_gettime,
@@ -243,9 +232,6 @@ TEST_F(TestTimeFixture, test_rcutils_with_bad_system_clocks) {
   }
 }
 
-#if defined(__MACH__)
-#undef clock_gettime
-#endif
 #endif  // !defined(_WIN32)
 
 // Tests the rcutils_time_point_value_as_nanoseconds_string() function.
@@ -299,6 +285,46 @@ TEST_F(TestTimeFixture, test_rcutils_time_point_value_as_nanoseconds_string) {
   ret = rcutils_time_point_value_as_nanoseconds_string(&timepoint, buffer, sizeof(buffer));
   EXPECT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;
   EXPECT_STREQ("-0000000000000000100", buffer);
+}
+
+// Tests the rcutils_time_point_value_as_date_string() function.
+TEST_F(TestTimeFixture, test_rcutils_time_point_value_as_date_string) {
+  rcutils_ret_t ret;
+  rcutils_time_point_value_t timepoint;
+  char buffer[256] = "";
+
+  // Typical use case.
+  timepoint = 100;
+  ret = rcutils_time_point_value_as_date_string(&timepoint, buffer, sizeof(buffer));
+  EXPECT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;
+  std::tm t = {};
+  std::istringstream ss(buffer);
+  // To test that it works we call it once with the correct format string
+  ss >> std::get_time(&t, "%Y-%m-%d %H:%M:%S");
+  ASSERT_FALSE(ss.fail());
+  std::istringstream ss2(buffer);
+  // and once with the false one
+  ss2 >> std::get_time(&t, "%Y-%b-%d %H:%M:%S");
+  ASSERT_TRUE(ss2.fail());
+
+  // nullptr for timepoint
+  ret = rcutils_time_point_value_as_date_string(nullptr, buffer, sizeof(buffer));
+  EXPECT_EQ(RCUTILS_RET_INVALID_ARGUMENT, ret);
+  rcutils_reset_error();
+
+  // nullptr for string
+  timepoint = 100;
+  ret = rcutils_time_point_value_as_date_string(&timepoint, nullptr, 0);
+  EXPECT_EQ(RCUTILS_RET_INVALID_ARGUMENT, ret);
+  rcutils_reset_error();
+
+  const char * test_str = "should not be touched";
+  timepoint = 100;
+  // buffer is of size 256, so it will fit
+  (void)memmove(buffer, test_str, strlen(test_str) + 1);
+  ret = rcutils_time_point_value_as_date_string(&timepoint, buffer, 0);
+  EXPECT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;
+  EXPECT_STREQ(test_str, buffer);
 }
 
 // Tests the rcutils_time_point_value_as_seconds_string() function.
