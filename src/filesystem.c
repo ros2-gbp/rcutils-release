@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #include "rcutils/filesystem.h"
 
 #include <errno.h>
@@ -50,7 +54,7 @@
 # define RCUTILS_PATH_DELIMITER "/"
 #endif  // _WIN32
 
-typedef struct rcutils_dir_iter_state_s
+typedef struct rcutils_dir_iter_state_t
 {
 #ifdef _WIN32
   HANDLE handle;
@@ -413,29 +417,30 @@ rcutils_dir_iter_start(const char * directory_path, const rcutils_allocator_t al
   RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
     &allocator, "allocator is invalid", return NULL);
 
-  rcutils_dir_iter_t * iter = allocator.zero_allocate(
+  rcutils_dir_iter_t * iter = (rcutils_dir_iter_t *)allocator.zero_allocate(
     1, sizeof(rcutils_dir_iter_t), allocator.state);
   if (NULL == iter) {
     return NULL;
   }
   iter->allocator = allocator;
 
-  iter->state = allocator.zero_allocate(
+  rcutils_dir_iter_state_t * state = (rcutils_dir_iter_state_t *)allocator.zero_allocate(
     1, sizeof(rcutils_dir_iter_state_t), allocator.state);
-  if (NULL == iter->state) {
+  if (NULL == state) {
     RCUTILS_SET_ERROR_MSG(
       "Failed to allocate memory.\n");
     goto rcutils_dir_iter_start_fail;
   }
+  iter->state = (void *)state;
 
 #ifdef _WIN32
   char * search_path = rcutils_join_path(directory_path, "*", allocator);
   if (NULL == search_path) {
     goto rcutils_dir_iter_start_fail;
   }
-  iter->state->handle = FindFirstFile(search_path, &iter->state->data);
+  state->handle = FindFirstFile(search_path, &state->data);
   allocator.deallocate(search_path, allocator.state);
-  if (INVALID_HANDLE_VALUE == iter->state->handle) {
+  if (INVALID_HANDLE_VALUE == state->handle) {
     DWORD error = GetLastError();
     if (ERROR_FILE_NOT_FOUND != error || !rcutils_is_directory(directory_path)) {
       RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -443,18 +448,18 @@ rcutils_dir_iter_start(const char * directory_path, const rcutils_allocator_t al
       goto rcutils_dir_iter_start_fail;
     }
   } else {
-    iter->entry_name = iter->state->data.cFileName;
+    iter->entry_name = state->data.cFileName;
   }
 #else
-  iter->state->dir = opendir(directory_path);
-  if (NULL == iter->state->dir) {
+  state->dir = opendir(directory_path);
+  if (NULL == state->dir) {
     RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "Can't open directory %s. Error code: %d\n", directory_path, errno);
     goto rcutils_dir_iter_start_fail;
   }
 
   errno = 0;
-  struct dirent * entry = readdir(iter->state->dir);
+  struct dirent * entry = readdir(state->dir);
   if (NULL != entry) {
     iter->entry_name = entry->d_name;
   } else if (0 != errno) {
@@ -475,15 +480,17 @@ bool
 rcutils_dir_iter_next(rcutils_dir_iter_t * iter)
 {
   RCUTILS_CHECK_ARGUMENT_FOR_NULL(iter, false);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(iter->state, "iter is invalid", false);
+  rcutils_dir_iter_state_t * state = (rcutils_dir_iter_state_t *)iter->state;
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(state, "iter is invalid", false);
 
 #ifdef _WIN32
-  if (FindNextFile(iter->state->handle, &iter->state->data)) {
-    iter->entry_name = iter->state->data.cFileName;
+  if (FindNextFile(state->handle, &state->data)) {
+    iter->entry_name = state->data.cFileName;
     return true;
   }
+  FindClose(state->handle);
 #else
-  struct dirent * entry = readdir(iter->state->dir);
+  struct dirent * entry = readdir(state->dir);
   if (NULL != entry) {
     iter->entry_name = entry->d_name;
     return true;
@@ -504,17 +511,17 @@ rcutils_dir_iter_end(rcutils_dir_iter_t * iter)
   rcutils_allocator_t allocator = iter->allocator;
   RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
     &allocator, "allocator is invalid", return );
-
-  if (NULL != iter->state) {
+  rcutils_dir_iter_state_t * state = (rcutils_dir_iter_state_t *)iter->state;
+  if (NULL != state) {
 #ifdef _WIN32
-    FindClose(iter->state->handle);
+    FindClose(state->handle);
 #else
-    if (NULL != iter->state->dir) {
-      closedir(iter->state->dir);
+    if (NULL != state->dir) {
+      closedir(state->dir);
     }
 #endif
 
-    allocator.deallocate(iter->state, allocator.state);
+    allocator.deallocate(state, allocator.state);
   }
 
   allocator.deallocate(iter, allocator.state);
@@ -533,3 +540,7 @@ rcutils_get_file_size(const char * file_path)
   int rc = stat(file_path, &stat_buffer);
   return rc == 0 ? (size_t)(stat_buffer.st_size) : 0;
 }
+
+#ifdef __cplusplus
+}
+#endif

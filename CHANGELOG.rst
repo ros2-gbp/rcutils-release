@@ -2,29 +2,18 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.9.2 (2024-09-16)
+6.7.2 (2024-09-17)
 ------------------
-* Add new API to set envar while specifying overwrite (`#473 <https://github.com/ros2/rcutils/issues/473>`_)
-* Contributors: Yadu
+* Add new API to set envar while specifying overwrite (`#473 <https://github.com/ros2/rcutils/issues/473>`_) (`#480 <https://github.com/ros2/rcutils/issues/480>`_)
+  (cherry picked from commit ea3675f63b0ce95dc81dc4a4aa3e263a75615c22)
+  Co-authored-by: Yadu <yadunund@intrinsic.ai>
+* Contributors: mergify[bot]
 
-6.9.1 (2024-07-29)
+6.7.1 (2024-04-24)
 ------------------
-* Remove completely unnecessary use of CLASSNAME. (`#471 <https://github.com/ros2/rcutils/issues/471>`_)
-* Contributors: Chris Lalancette
-
-6.9.0 (2024-06-17)
-------------------
-* load dll built by MINGW with lib prefix (`#470 <https://github.com/ros2/rcutils/issues/470>`_)
-* add mingw support (`#468 <https://github.com/ros2/rcutils/issues/468>`_)
-* Fix filesystem iteration on Windows (`#469 <https://github.com/ros2/rcutils/issues/469>`_)
-* Add 'mimick' label to tests which use Mimick (`#466 <https://github.com/ros2/rcutils/issues/466>`_)
-* Contributors: Chris Lalancette, Felix F Xu, Scott K Logan
-
-6.8.0 (2024-04-26)
-------------------
-* Removed warnings - strict-prototypes (`#461 <https://github.com/ros2/rcutils/issues/461>`_)
-* Increase timeout repl_str test (`#463 <https://github.com/ros2/rcutils/issues/463>`_)
-* Contributors: Alejandro Hernández Cordero
+* Removed warnings - strict-prototypes (`#461 <https://github.com/ros2/rcutils/issues/461>`_) (`#465 <https://github.com/ros2/rcutils/issues/465>`_)
+* Increase timeout repl_str test (`#463 <https://github.com/ros2/rcutils/issues/463>`_) (`#464 <https://github.com/ros2/rcutils/issues/464>`_)
+* Contributors: mergify[bot]
 
 6.7.0 (2024-04-16)
 ------------------
