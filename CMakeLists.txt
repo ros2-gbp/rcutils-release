@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.12)
 
 project(rcutils)
 
@@ -15,21 +15,6 @@ include(CheckLibraryExists)
 
 find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
-
-# By default, without the settings below, find_package(Python3) will attempt
-# to find the newest python version it can, and additionally will find the
-# most specific version.  For instance, on a system that has
-# /usr/bin/python3.10, /usr/bin/python3.11, and /usr/bin/python3, it will find
-# /usr/bin/python3.11, even if /usr/bin/python3 points to /usr/bin/python3.10.
-# The behavior we want is to prefer the "system" installed version unless the
-# user specifically tells us othewise through the Python3_EXECUTABLE hint.
-# Setting CMP0094 to NEW means that the search will stop after the first
-# python version is found.  Setting Python3_FIND_UNVERSIONED_NAMES means that
-# the search will prefer /usr/bin/python3 over /usr/bin/python3.11.  And that
-# latter functionality is only available in CMake 3.20 or later, so we need
-# at least that version.
-cmake_policy(SET CMP0094 NEW)
-set(Python3_FIND_UNVERSIONED_NAMES FIRST)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
@@ -212,7 +197,7 @@ if(BUILD_TESTING)
     osrf_testing_tools_cpp::memory_tools LIBRARY_PRELOAD_ENVIRONMENT_IS_AVAILABLE)
 
   ament_add_gtest(test_logging test/test_logging.cpp)
-  target_link_libraries(test_logging ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
+  target_link_libraries(test_logging ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
 
   add_executable(test_logging_long_messages test/test_logging_long_messages.cpp)
   target_link_libraries(test_logging_long_messages ${PROJECT_NAME})
@@ -257,7 +242,7 @@ if(BUILD_TESTING)
     test/test_char_array.cpp
   )
   if(TARGET test_char_array)
-    target_link_libraries(test_char_array ${PROJECT_NAME})
+    target_link_libraries(test_char_array ${PROJECT_NAME} mimick)
   endif()
 
   # Can't use C++ with stdatomic_helper.h
@@ -298,7 +283,7 @@ if(BUILD_TESTING)
     test/test_split.cpp
   )
   if(TARGET test_split)
-    target_link_libraries(test_split ${PROJECT_NAME})
+    target_link_libraries(test_split ${PROJECT_NAME} mimick)
   endif()
 
   ament_add_gtest(test_find
@@ -337,7 +322,8 @@ if(BUILD_TESTING)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
   if(TARGET test_filesystem)
-    target_link_libraries(test_filesystem ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
+    ament_target_dependencies(test_filesystem "osrf_testing_tools_cpp")
+    target_link_libraries(test_filesystem ${PROJECT_NAME} mimick)
     target_compile_definitions(test_filesystem PRIVATE BUILD_DIR="${CMAKE_CURRENT_BINARY_DIR}")
   endif()
 
@@ -352,14 +338,15 @@ if(BUILD_TESTING)
     test/test_format_string.cpp
   )
   if(TARGET test_format_string)
-    target_link_libraries(test_format_string ${PROJECT_NAME})
+    target_link_libraries(test_format_string ${PROJECT_NAME} mimick)
   endif()
 
   ament_add_gtest(test_string_map
     test/test_string_map.cpp
   )
   if(TARGET test_string_map)
-    target_link_libraries(test_string_map ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
+    ament_target_dependencies(test_string_map "osrf_testing_tools_cpp")
+    target_link_libraries(test_string_map ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_isalnum_no_locale
@@ -371,7 +358,6 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_repl_str
     test/test_repl_str.cpp
-    TIMEOUT 300
   )
   if(TARGET test_repl_str)
     target_link_libraries(test_repl_str ${PROJECT_NAME})
@@ -404,7 +390,7 @@ if(BUILD_TESTING)
       # documentation says otherwise, so here we fallback to DT_RPATH entries.
       target_link_libraries(test_shared_library_in_run_paths "-Wl,--disable-new-dtags")
     endif()
-    target_link_libraries(test_shared_library_in_run_paths ${PROJECT_NAME})
+    target_link_libraries(test_shared_library_in_run_paths ${PROJECT_NAME} mimick)
   endif()
 
   set(project_binary_dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
@@ -421,7 +407,7 @@ if(BUILD_TESTING)
       LIBRARY_OUTPUT_DIRECTORY ${test_libraries_dir})
     target_compile_definitions(test_shared_library_in_load_paths PRIVATE
       "SHARED_LIBRARY_UNDER_TEST=dummy_shared_library_in_load_paths")
-    target_link_libraries(test_shared_library_in_load_paths ${PROJECT_NAME})
+    target_link_libraries(test_shared_library_in_load_paths ${PROJECT_NAME} mimick)
   endif()
 
   include(CheckCXXCompilerFlag)
@@ -454,7 +440,7 @@ if(BUILD_TESTING)
       endif()
     endif()
     target_link_libraries(test_shared_library_preloaded dummy_shared_library_preloaded)
-    target_link_libraries(test_shared_library_preloaded ${PROJECT_NAME})
+    target_link_libraries(test_shared_library_preloaded ${PROJECT_NAME} mimick)
   endif()
 
   ament_add_gtest(test_time
@@ -584,9 +570,6 @@ if(BUILD_TESTING)
   ament_add_gtest(test_macros
     test/test_macros.cpp
   )
-  if(TARGET test_macros)
-    target_link_libraries(test_macros ${PROJECT_NAME})
-  endif()
 
   add_performance_test(benchmark_logging test/benchmark/benchmark_logging.cpp)
   if(TARGET benchmark_logging)
@@ -596,6 +579,10 @@ if(BUILD_TESTING)
   add_performance_test(benchmark_err_handle test/benchmark/benchmark_error_handling.cpp)
   if(TARGET benchmark_err_handle)
     target_link_libraries(benchmark_err_handle ${PROJECT_NAME})
+  endif()
+
+  if(TARGET test_macros)
+    target_link_libraries(test_macros ${PROJECT_NAME})
   endif()
 endif()
 
