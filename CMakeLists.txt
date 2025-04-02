@@ -13,8 +13,9 @@ endif()
 
 include(CheckLibraryExists)
 
+find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
-find_package(ament_cmake_ros REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 
 # By default, without the settings below, find_package(Python3) will attempt
 # to find the newest python version it can, and additionally will find the
@@ -74,6 +75,7 @@ set(rcutils_sources
   src/find.c
   src/format_string.c
   src/hash_map.c
+  src/join.c
   src/logging.c
   src/process.c
   src/qsort.c
@@ -301,6 +303,13 @@ if(BUILD_TESTING)
     target_link_libraries(test_split ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_join
+    test/test_join.cpp
+  )
+  if(TARGET test_join)
+    target_link_libraries(test_join ${PROJECT_NAME})
+  endif()
+
   ament_add_gtest(test_find
     test/test_find.cpp
   )
@@ -514,6 +523,9 @@ if(BUILD_TESTING)
   )
   if(TARGET test_process)
     target_link_libraries(test_process ${PROJECT_NAME})
+    target_compile_definitions(test_process PRIVATE
+      "CMAKE_COMMAND=${CMAKE_COMMAND}")
+    file(TOUCH "${CMAKE_CURRENT_BINARY_DIR}/file with space.txt")
   endif()
 
   ament_add_gtest(test_logging_custom_env test/test_logging_custom_env.cpp
