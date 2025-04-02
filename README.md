@@ -1,3 +1,26 @@
+## rcutils (rolling) - 6.9.5-1
+
+The packages in the `rcutils` repository were released into the `rolling` distro by running `/home/cottsay/infra_ws/install/bloom/bin/bloom-release -r rolling rcutils` on `Wed, 02 Apr 2025 20:33:25 -0000`
+
+The `rcutils` package was released.
+
+Version of package(s) in repository `rcutils`:
+
+- upstream repository: https://github.com/ros2/rcutils.git
+- release repository: https://github.com/ros2-gbp/rcutils-release.git
+- rosdistro version: `6.9.4-1`
+- old version: `6.9.4-1`
+- new version: `6.9.5-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.25.1`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## rcutils (rolling) - 6.9.4-1
 
 The packages in the `rcutils` repository were released into the `rolling` distro by running `/usr/bin/bloom-release -r rolling rcutils` on `Sun, 02 Feb 2025 21:12:34 -0000`
