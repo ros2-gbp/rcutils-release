@@ -2,6 +2,12 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.0.0 (2025-07-01)
+------------------
+* Hand-code logging_macros.h (`#502 <https://github.com/ros2/rcutils/issues/502>`_)
+* Implement rcutils_strnlen. (`#430 <https://github.com/ros2/rcutils/issues/430>`_)
+* Contributors: Andrei Kholodnyi, Chris Lalancette
+
 6.10.1 (2025-05-30)
 -------------------
 * use getenv_s instead of getenv for Windows. (`#499 <https://github.com/ros2/rcutils/issues/499>`_)
