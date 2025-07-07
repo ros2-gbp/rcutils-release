@@ -2,21 +2,11 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-7.0.0 (2025-07-01)
+6.9.6 (2025-07-07)
 ------------------
-* Hand-code logging_macros.h (`#502 <https://github.com/ros2/rcutils/issues/502>`_)
-* Implement rcutils_strnlen. (`#430 <https://github.com/ros2/rcutils/issues/430>`_)
-* Contributors: Andrei Kholodnyi, Chris Lalancette
-
-6.10.1 (2025-05-30)
--------------------
-* use getenv_s instead of getenv for Windows. (`#499 <https://github.com/ros2/rcutils/issues/499>`_)
-* Make linters happy
-* Clean memory in test_process.cpp (`#495 <https://github.com/ros2/rcutils/issues/495>`_)
-* Contributors: Alejandro Hernández Cordero, Tomoya Fujita
-
-6.10.0 (2025-04-24)
--------------------
+* Use getenv_s instead of getenv for Windows (`#499 <https://github.com/ros2/rcutils/issues/499>`_) (`#500 <https://github.com/ros2/rcutils/issues/500>`_)
+* Clean memory in test_process.cpp (backport `#495 <https://github.com/ros2/rcutils/issues/495>`_) (`#496 <https://github.com/ros2/rcutils/issues/496>`_)
+* Contributors: Alejandro Hernandez Cordero, Tomoya Fujita
 
 6.9.5 (2025-04-02)
 ------------------
