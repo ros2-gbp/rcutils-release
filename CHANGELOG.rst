@@ -2,11 +2,27 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.9.6 (2025-07-07)
+7.0.1 (2025-07-14)
 ------------------
-* Use getenv_s instead of getenv for Windows (`#499 <https://github.com/ros2/rcutils/issues/499>`_) (`#500 <https://github.com/ros2/rcutils/issues/500>`_)
-* Clean memory in test_process.cpp (backport `#495 <https://github.com/ros2/rcutils/issues/495>`_) (`#496 <https://github.com/ros2/rcutils/issues/496>`_)
-* Contributors: Alejandro Hernandez Cordero, Tomoya Fujita
+* Revert "use getenv_s instead of getenv for Windows. (`#499 <https://github.com/ros2/rcutils/issues/499>`_)" (`#504 <https://github.com/ros2/rcutils/issues/504>`_)
+  This reverts commit 46ab4d4eeb555a2e9e880157b97f0a867d3a256c.
+* Contributors: Chris Lalancette
+
+7.0.0 (2025-07-01)
+------------------
+* Hand-code logging_macros.h (`#502 <https://github.com/ros2/rcutils/issues/502>`_)
+* Implement rcutils_strnlen. (`#430 <https://github.com/ros2/rcutils/issues/430>`_)
+* Contributors: Andrei Kholodnyi, Chris Lalancette
+
+6.10.1 (2025-05-30)
+-------------------
+* use getenv_s instead of getenv for Windows. (`#499 <https://github.com/ros2/rcutils/issues/499>`_)
+* Make linters happy
+* Clean memory in test_process.cpp (`#495 <https://github.com/ros2/rcutils/issues/495>`_)
+* Contributors: Alejandro Hernández Cordero, Tomoya Fujita
+
+6.10.0 (2025-04-24)
+-------------------
 
 6.9.5 (2025-04-02)
 ------------------
