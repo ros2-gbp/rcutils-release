@@ -13,9 +13,8 @@ endif()
 
 include(CheckLibraryExists)
 
-find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
-find_package(ament_cmake_ros_core REQUIRED)
+find_package(ament_cmake_ros REQUIRED)
 
 # By default, without the settings below, find_package(Python3) will attempt
 # to find the newest python version it can, and additionally will find the
@@ -75,7 +74,6 @@ set(rcutils_sources
   src/find.c
   src/format_string.c
   src/hash_map.c
-  src/join.c
   src/logging.c
   src/process.c
   src/qsort.c
@@ -303,13 +301,6 @@ if(BUILD_TESTING)
     target_link_libraries(test_split ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_join
-    test/test_join.cpp
-  )
-  if(TARGET test_join)
-    target_link_libraries(test_join ${PROJECT_NAME})
-  endif()
-
   ament_add_gtest(test_find
     test/test_find.cpp
   )
@@ -320,7 +311,6 @@ if(BUILD_TESTING)
   ament_add_gtest(test_strerror
     test/test_strerror.cpp
   )
-  ament_add_test_label(test_strerror mimick)
   if(TARGET test_strerror)
     target_link_libraries(test_strerror ${PROJECT_NAME} mimick)
   endif()
@@ -346,7 +336,6 @@ if(BUILD_TESTING)
     test/test_filesystem.cpp
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
-  ament_add_test_label(test_filesystem mimick)
   if(TARGET test_filesystem)
     target_link_libraries(test_filesystem ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
     target_compile_definitions(test_filesystem PRIVATE BUILD_DIR="${CMAKE_CURRENT_BINARY_DIR}")
@@ -471,7 +460,6 @@ if(BUILD_TESTING)
   ament_add_gtest(test_time
     test/test_time.cpp
     ENV ${memory_tools_test_env_vars})
-  ament_add_test_label(test_time mimick)
   if(TARGET test_time)
     target_link_libraries(test_time ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
   endif()
@@ -523,9 +511,6 @@ if(BUILD_TESTING)
   )
   if(TARGET test_process)
     target_link_libraries(test_process ${PROJECT_NAME})
-    target_compile_definitions(test_process PRIVATE
-      "CMAKE_COMMAND=${CMAKE_COMMAND}")
-    file(TOUCH "${CMAKE_CURRENT_BINARY_DIR}/file with space.txt")
   endif()
 
   ament_add_gtest(test_logging_custom_env test/test_logging_custom_env.cpp
@@ -537,7 +522,6 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_USE_STDOUT=1
       RCUTILS_COLORIZED_OUTPUT=1
   )
-  ament_add_test_label(test_logging_custom_env mimick)
   if(TARGET test_logging_custom_env)
     target_link_libraries(test_logging_custom_env ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools mimick)
   endif()
@@ -555,7 +539,6 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_USE_STDOUT=0
       RCUTILS_COLORIZED_OUTPUT=0
   )
-  ament_add_test_label(test_logging_custom_env2 mimick)
   if(TARGET test_logging_custom_env2)
     target_link_libraries(test_logging_custom_env2 ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools mimick)
   endif()

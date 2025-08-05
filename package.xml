@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rcutils</name>
-  <version>6.9.7</version>
+  <version>6.7.3</version>
   <description>Package containing various utility types and functions for C</description>
 
   <maintainer email="alejandro@openrobotics.org">Alejandro Hernandez Cordero</maintainer>
@@ -13,8 +13,7 @@
 
   <author email="karsten@osrfoundation.org">Karsten Knese</author>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_cmake_ros_core</buildtool_depend>
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>python3-empy</buildtool_depend>
 
   <depend>libatomic</depend>
