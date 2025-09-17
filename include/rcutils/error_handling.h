@@ -22,9 +22,6 @@ extern "C"
 {
 #endif
 
-#ifndef __STDC_WANT_LIB_EXT1__
-#define __STDC_WANT_LIB_EXT1__ 1  // indicate we would like strnlen_s if available
-#endif
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -36,23 +33,18 @@ extern "C"
 #include "rcutils/allocator.h"
 #include "rcutils/macros.h"
 #include "rcutils/snprintf.h"
+#include "rcutils/strnlen.h"
 #include "rcutils/testing/fault_injection.h"
 #include "rcutils/types/rcutils_ret.h"
 #include "rcutils/visibility_control.h"
 
-#ifdef __STDC_LIB_EXT1__
 /// Write the given msg out to stderr, limiting the buffer size in the `fwrite`.
 /**
  * This ensures that there is an upper bound to a buffer overrun if `msg` is
  * non-null terminated.
  */
 #define RCUTILS_SAFE_FWRITE_TO_STDERR(msg) \
-  do {fwrite(msg, sizeof(char), strnlen_s(msg, 4096), stderr);} while (0)
-#else
-/// Write the given msg out to stderr.
-#define RCUTILS_SAFE_FWRITE_TO_STDERR(msg) \
-  do {fwrite(msg, sizeof(char), strlen(msg), stderr);} while (0)
-#endif
+  do {fwrite(msg, sizeof(char), rcutils_strnlen(msg, 4096), stderr);} while (0)
 
 /// Set the error message to stderr using a format string and format arguments.
 /**
@@ -313,6 +305,75 @@ rcutils_get_error_string(void);
 RCUTILS_PUBLIC
 void
 rcutils_reset_error(void);
+
+/// Set the error message using RCUTILS_SET_ERROR_MSG and append the previous error.
+/**
+ * If there is no previous error, has same behavior as RCUTILS_SET_ERROR_MSG.
+ * \param[in] msg The error message to be set.
+ */
+#define RCUTILS_SET_ERROR_MSG_AND_APPEND_PREV_ERROR(msg) \
+  do { \
+    rcutils_error_string_t error_string = rcutils_get_error_string(); \
+    rcutils_reset_error(); \
+    RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING( \
+      RCUTILS_EXPAND(msg ": %s"), error_string.str); \
+  } while (0)
+
+/// Set the error message with RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING and append the previous
+/// error.
+/**
+ * This function sets the error message using the given format string, and appends and resets the
+ * latest error string.
+ * The resulting formatted string is silently truncated at RCUTILS_ERROR_MESSAGE_MAX_LENGTH.
+ *
+ * If there is no previous error, has same behavior as RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING.
+ *
+ * \param[in] format_string The string to be used as the format of the error message.
+ * \param[in] ... Arguments for the format string.
+ */
+#define RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING_AND_APPEND_PREV_ERROR(format_string, ...) \
+  do { \
+    rcutils_error_string_t error_string = rcutils_get_error_string(); \
+    rcutils_reset_error(); \
+    RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING( \
+      RCUTILS_EXPAND(format_string ": %s"), __VA_ARGS__, error_string.str); \
+  } while (0)
+
+/// Write the given msg out to stderr, limiting the buffer size in the `fwrite`, appending the
+/// previous error.
+/**
+ * This will reset the previous error, if it exists.
+ * If there is no previous error, has same behavior as RCUTILS_SAFE_FWRITE_TO_STDERR.
+ */
+#define RCUTILS_SAFE_FWRITE_TO_STDERR_AND_APPEND_PREV_ERROR(msg) \
+  do { \
+    rcutils_error_string_t error_string = rcutils_get_error_string(); \
+    rcutils_reset_error(); \
+    RCUTILS_SAFE_FWRITE_TO_STDERR(msg); \
+    RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING(": %s", error_string.str); \
+  } while (0)
+
+/// Set the error message to stderr using a format string and format arguments, appending the
+/// previous error.
+/**
+ * This function sets the error message to stderr using the given format string, appending and
+ * resetting the previous error.
+ * The resulting formatted string is silently truncated at RCUTILS_ERROR_MESSAGE_MAX_LENGTH.
+ *
+ * This will reset the previous error, if it exists.
+ * If there is no previous error, has same behavior as
+ * RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING.
+ *
+ * \param[in] format_string The string to be used as the format of the error message.
+ * \param[in] ... Arguments for the format string.
+ */
+#define RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING_AND_APPEND_PREV_ERROR(format_string, ...) \
+  do { \
+    rcutils_error_string_t error_string = rcutils_get_error_string(); \
+    rcutils_reset_error(); \
+    RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING(format_string, __VA_ARGS__); \
+    RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING(": %s", error_string.str); \
+  } while (0)
 
 #ifdef __cplusplus
 }
