@@ -150,6 +150,14 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 
+check_library_exists(atomic __atomic_load_8 "" HAVE_LIBATOMICS)
+
+if(HAVE_LIBATOMICS AND NOT WIN32)
+  # Exporting link flag since it won't pass ament_export_libraries() existence check
+  ament_export_link_flags("-latomic")
+  target_link_libraries(${PROJECT_NAME} atomic)
+endif()
+
 # Needed if pthread is used for thread local storage.
 if(IOS AND IOS_SDK_VERSION LESS 10.0)
   ament_export_libraries(pthread)
@@ -176,13 +184,6 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(launch_testing_ament_cmake REQUIRED)
-
-  check_library_exists(atomic __atomic_load_8 "" HAVE_LIBATOMICS)
-
-  if(HAVE_LIBATOMICS AND NOT WIN32)
-    # Exporting link flag since it won't pass ament_export_libraries() existance check
-    ament_export_link_flags("-latomic")
-  endif()
 
   if(ament_cmake_cppcheck_FOUND)
     ament_cppcheck(
@@ -618,7 +619,7 @@ endif()
 
 # Export old-style CMake variables
 ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
+ament_export_libraries(${PROJECT_NAME})
 
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
