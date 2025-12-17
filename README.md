@@ -1,3 +1,26 @@
+## rcutils (humble) - 5.1.8-1
+
+The packages in the `rcutils` repository were released into the `humble` distro by running `/usr/bin/bloom-release --rosdistro humble --track humble rcutils` on `Wed, 17 Dec 2025 09:40:28 -0000`
+
+The `rcutils` package was released.
+
+Version of package(s) in repository `rcutils`:
+
+- upstream repository: https://github.com/ros2/rcutils.git
+- release repository: https://github.com/ros2-gbp/rcutils-release.git
+- rosdistro version: `5.1.7-1`
+- old version: `5.1.7-1`
+- new version: `5.1.8-1`
+
+Versions of tools used:
+
+- bloom version: `0.13.0`
+- catkin_pkg version: `1.1.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## rcutils (jazzy) - 6.7.5-1
 
 The packages in the `rcutils` repository were released into the `jazzy` distro by running `/usr/bin/bloom-release --rosdistro jazzy --track jazzy rcutils` on `Wed, 17 Dec 2025 09:30:04 -0000`
