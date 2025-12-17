@@ -2,74 +2,45 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.9.9 (2025-12-17)
+6.7.5 (2025-12-17)
 ------------------
-* Check SIZE_MAX for array initialization. (`#527 <https://github.com/ros2/rcutils/issues/527>`_) (`#529 <https://github.com/ros2/rcutils/issues/529>`_)
-* Do not export dl in rcutils_LIBRARIES (`#522 <https://github.com/ros2/rcutils/issues/522>`_) (`#524 <https://github.com/ros2/rcutils/issues/524>`_)
-* Export -latomic even if BUILD_TESTING is disabled. (backport `#516 <https://github.com/ros2/rcutils/issues/516>`_) (`#517 <https://github.com/ros2/rcutils/issues/517>`_)
+* Check SIZE_MAX for array initialization. (`#527 <https://github.com/ros2/rcutils/issues/527>`_) (`#530 <https://github.com/ros2/rcutils/issues/530>`_)
+* Export -latomic even if BUILD_TESTING is disabled. (backport `#516 <https://github.com/ros2/rcutils/issues/516>`_) (`#518 <https://github.com/ros2/rcutils/issues/518>`_)
 * Contributors: mergify[bot]
 
-6.9.8 (2025-08-22)
+6.7.4 (2025-08-22)
 ------------------
-* Add rcutils_raw_steady_time_now method for slew-free clock (`#507 <https://github.com/ros2/rcutils/issues/507>`_) (`#513 <https://github.com/ros2/rcutils/issues/513>`_)
+* Add rcutils_raw_steady_time_now method for slew-free clock (`#507 <https://github.com/ros2/rcutils/issues/507>`_) (`#514 <https://github.com/ros2/rcutils/issues/514>`_)
 * Contributors: mergify[bot]
 
-6.9.7 (2025-07-14)
+6.7.3 (2025-08-05)
 ------------------
-* Revert "use getenv_s instead of getenv for Windows. (`#499 <https://github.com/ros2/rcutils/issues/499>`_)" (`#504 <https://github.com/ros2/rcutils/issues/504>`_) (`#505 <https://github.com/ros2/rcutils/issues/505>`_)
+* Revert "use getenv_s instead of getenv for Windows. (`#499 <https://github.com/ros2/rcutils/issues/499>`_)" (`#504 <https://github.com/ros2/rcutils/issues/504>`_) (`#506 <https://github.com/ros2/rcutils/issues/506>`_)
   This reverts commit 46ab4d4eeb555a2e9e880157b97f0a867d3a256c.
   (cherry picked from commit 3a4beda924bfcf766803d25752cbbf911f445e99)
   Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+* use getenv_s instead of getenv for Windows. (`#499 <https://github.com/ros2/rcutils/issues/499>`_) (`#501 <https://github.com/ros2/rcutils/issues/501>`_)
+  (cherry picked from commit 46ab4d4eeb555a2e9e880157b97f0a867d3a256c)
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* Remove CODEOWNERS and mirror-rolling-to-master workflow. (`#483 <https://github.com/ros2/rcutils/issues/483>`_) (`#484 <https://github.com/ros2/rcutils/issues/484>`_)
+  They are both out-of-date, and no longer serving their
+  intended purpose.  Delete them.
+  (cherry picked from commit f662ccae73e367d8074a481f854adfb5d6541c53)
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
 * Contributors: mergify[bot]
 
-6.9.6 (2025-07-07)
+6.7.2 (2024-09-17)
 ------------------
-* Use getenv_s instead of getenv for Windows (`#499 <https://github.com/ros2/rcutils/issues/499>`_) (`#500 <https://github.com/ros2/rcutils/issues/500>`_)
-* Clean memory in test_process.cpp (backport `#495 <https://github.com/ros2/rcutils/issues/495>`_) (`#496 <https://github.com/ros2/rcutils/issues/496>`_)
-* Contributors: Alejandro Hernandez Cordero, Tomoya Fujita
+* Add new API to set envar while specifying overwrite (`#473 <https://github.com/ros2/rcutils/issues/473>`_) (`#480 <https://github.com/ros2/rcutils/issues/480>`_)
+  (cherry picked from commit ea3675f63b0ce95dc81dc4a4aa3e263a75615c22)
+  Co-authored-by: Yadu <yadunund@intrinsic.ai>
+* Contributors: mergify[bot]
 
-6.9.5 (2025-04-02)
+6.7.1 (2024-04-24)
 ------------------
-* Handle spaces in start_process arguments on Windows (`#494 <https://github.com/ros2/rcutils/issues/494>`_)
-* Add utility functions for invoking a subprocess (`#491 <https://github.com/ros2/rcutils/issues/491>`_) (`#492 <https://github.com/ros2/rcutils/issues/492>`_)
-* Add rcutils_join function for concatenating strings (`#490 <https://github.com/ros2/rcutils/issues/490>`_)
-* Switch to ament_cmake_ros_core package (`#489 <https://github.com/ros2/rcutils/issues/489>`_)
-* Contributors: Alejandro Hernández Cordero, Michael Carroll, Scott K Logan
-
-6.9.4 (2025-02-02)
-------------------
-* Cleanup error handling in rcutils. (`#485 <https://github.com/ros2/rcutils/issues/485>`_)
-* Remove CODEOWNERS and mirror-rolling-to-master workflow. (`#483 <https://github.com/ros2/rcutils/issues/483>`_)
-* Contributors: Chris Lalancette
-
-6.9.3 (2024-10-03)
-------------------
-* Fix setting allocator to NULL. (`#478 <https://github.com/ros2/rcutils/issues/478>`_)
-* Contributors: Chris Lalancette
-
-6.9.2 (2024-09-16)
-------------------
-* Add new API to set envar while specifying overwrite (`#473 <https://github.com/ros2/rcutils/issues/473>`_)
-* Contributors: Yadu
-
-6.9.1 (2024-07-29)
-------------------
-* Remove completely unnecessary use of CLASSNAME. (`#471 <https://github.com/ros2/rcutils/issues/471>`_)
-* Contributors: Chris Lalancette
-
-6.9.0 (2024-06-17)
-------------------
-* load dll built by MINGW with lib prefix (`#470 <https://github.com/ros2/rcutils/issues/470>`_)
-* add mingw support (`#468 <https://github.com/ros2/rcutils/issues/468>`_)
-* Fix filesystem iteration on Windows (`#469 <https://github.com/ros2/rcutils/issues/469>`_)
-* Add 'mimick' label to tests which use Mimick (`#466 <https://github.com/ros2/rcutils/issues/466>`_)
-* Contributors: Chris Lalancette, Felix F Xu, Scott K Logan
-
-6.8.0 (2024-04-26)
-------------------
-* Removed warnings - strict-prototypes (`#461 <https://github.com/ros2/rcutils/issues/461>`_)
-* Increase timeout repl_str test (`#463 <https://github.com/ros2/rcutils/issues/463>`_)
-* Contributors: Alejandro Hernández Cordero
+* Removed warnings - strict-prototypes (`#461 <https://github.com/ros2/rcutils/issues/461>`_) (`#465 <https://github.com/ros2/rcutils/issues/465>`_)
+* Increase timeout repl_str test (`#463 <https://github.com/ros2/rcutils/issues/463>`_) (`#464 <https://github.com/ros2/rcutils/issues/464>`_)
+* Contributors: mergify[bot]
 
 6.7.0 (2024-04-16)
 ------------------
