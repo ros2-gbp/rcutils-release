@@ -1,4 +1,4 @@
-// Copyright 2020 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DUMMY_SHARED_LIBRARY__DUMMY_SHARED_LIBRARY_H_
-#define DUMMY_SHARED_LIBRARY__DUMMY_SHARED_LIBRARY_H_
+/// \file
 
-#if _WIN32
-#ifdef DUMMY_SHARED_LIBRARY_BUILDING_DLL
-#define DUMMY_SHARED_LIBRARY_PUBLIC __declspec(dllexport)
+#ifndef RCUTILS__GET_ENV_H_
+#define RCUTILS__GET_ENV_H_
+
+// TODO(christophebedard) remove this header completely in I-turtle
+
+#ifdef _MSC_VER
+#pragma message ("rcutils/get_env.h has been deprecated, please include rcutils/env.h instead")
 #else
-#define DUMMY_SHARED_LIBRARY_PUBLIC __declspec(dllimport)
-#endif
-#else
-#define DUMMY_SHARED_LIBRARY_PUBLIC
+#warning rcutils/get_env.h has been deprecated, please include rcutils/env.h instead
 #endif
 
-#include <stdio.h>
+#include "rcutils/env.h"
 
-DUMMY_SHARED_LIBRARY_PUBLIC
-void print_name();
-
-#endif  // DUMMY_SHARED_LIBRARY__DUMMY_SHARED_LIBRARY_H_
+#endif  // RCUTILS__GET_ENV_H_
