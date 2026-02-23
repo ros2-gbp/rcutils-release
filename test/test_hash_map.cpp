@@ -95,6 +95,18 @@ TEST_F(HashMapBaseTest, init_map_initial_capacity_zero_fails) {
   EXPECT_EQ(RCUTILS_RET_INVALID_ARGUMENT, ret) << rcutils_get_error_string().str;
 }
 
+TEST_F(HashMapBaseTest, init_map_initial_capacity_not_power_of_two) {
+  rcutils_ret_t ret = rcutils_hash_map_init(
+    &map, 3, sizeof(uint32_t), sizeof(uint32_t),
+    test_hash_map_uint32_hash_func, test_uint32_cmp, &allocator);
+  ASSERT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;
+  size_t current_capacity = 0;
+  ASSERT_EQ(RCUTILS_RET_OK, rcutils_hash_map_get_capacity(&map, &current_capacity));
+  EXPECT_EQ(4u, current_capacity);
+  ret = rcutils_hash_map_fini(&map);
+  EXPECT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;
+}
+
 TEST_F(HashMapBaseTest, init_map_key_size_zero_fails) {
   rcutils_ret_t ret = rcutils_hash_map_init(
     &map, 2, 0, sizeof(uint32_t),
@@ -138,6 +150,7 @@ TEST_F(HashMapBaseTest, init_map_failing_allocator) {
     &map, 2, sizeof(uint32_t), sizeof(uint32_t),
     test_hash_map_uint32_hash_func, test_uint32_cmp, &failing_allocator);
   EXPECT_EQ(RCUTILS_RET_BAD_ALLOC, ret) << rcutils_get_error_string().str;
+  rcutils_reset_error();
 
   // Check allocate hash_map->impl->map fails
   set_time_bomb_allocator_malloc_count(failing_allocator, 1);
@@ -145,6 +158,7 @@ TEST_F(HashMapBaseTest, init_map_failing_allocator) {
     &map, 2, sizeof(uint32_t), sizeof(uint32_t),
     test_hash_map_uint32_hash_func, test_uint32_cmp, &failing_allocator);
   EXPECT_EQ(RCUTILS_RET_BAD_ALLOC, ret) << rcutils_get_error_string().str;
+  rcutils_reset_error();
 }
 
 TEST_F(HashMapBaseTest, init_map_success) {
@@ -424,7 +438,8 @@ TEST_F(HashMapPreInitTest, get_next_key_and_data_working) {
   last_key = ret_key;
 
   // Get the next entry
-  ret = rcutils_hash_map_get_next_key_and_data(&map, &ret_key, &ret_key, &ret_data);
+  ret_key = 0;
+  ret = rcutils_hash_map_get_next_key_and_data(&map, &last_key, &ret_key, &ret_data);
   EXPECT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;
   EXPECT_TRUE(1 == ret_key || 2 == ret_key);  // we only put these two keys in the map
   EXPECT_NE(last_key, ret_key);
@@ -480,7 +495,7 @@ TEST_F(HashMapBaseTest, string_keys) {
   const char * key2 = "two";
   const char * lookup_key = "one";
   rcutils_ret_t ret = rcutils_hash_map_init(
-    &map, 10, sizeof(char *), sizeof(uint32_t),
+    &map, 8, sizeof(char *), sizeof(uint32_t),
     rcutils_hash_map_string_hash_func, rcutils_hash_map_string_cmp_func,
     &allocator);
   EXPECT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;

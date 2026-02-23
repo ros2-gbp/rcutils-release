@@ -72,6 +72,45 @@ def generate_test_description():
     ))
     processes_to_test.append(name)
 
+    env_simple_escape_tokens = dict(os.environ)
+    # This custom output is to check that escape characters work correctly.
+    env_simple_escape_tokens['RCUTILS_CONSOLE_OUTPUT_FORMAT'] = '\\t{name}\\n\\t{message}\\n'
+    name = 'test_logging_output_format_simple_escape'
+    launch_description.add_action(ExecuteProcess(
+        cmd=[executable], env=env_simple_escape_tokens, name=name, output='screen'
+    ))
+    processes_to_test.append(name)
+
+    env_complicated_escape_tokens = dict(os.environ)
+    # This custom output is to check that escape characters work correctly.
+    env_complicated_escape_tokens['RCUTILS_CONSOLE_OUTPUT_FORMAT'] = \
+        '{name} 0\\a1\\b23\\n44\\r5\\t67 {message}'
+    name = 'test_logging_output_format_complicated_escape'
+    launch_description.add_action(ExecuteProcess(
+        cmd=[executable], env=env_complicated_escape_tokens, name=name, output='screen'
+    ))
+    processes_to_test.append(name)
+
+    env_escape_sequence = dict(os.environ)
+    # This custom output is to check that escape characters work correctly.
+    env_escape_sequence['RCUTILS_CONSOLE_OUTPUT_FORMAT'] = \
+        '{name} \x1b[0m {message}'
+    name = 'test_logging_output_format_escape_sequence'
+    launch_description.add_action(ExecuteProcess(
+        cmd=[executable], env=env_escape_sequence, name=name, output='screen'
+    ))
+    processes_to_test.append(name)
+
+    env_short_file_name = dict(os.environ)
+    # This custom output is to check that {short_file_name} outputs the basename of the file.
+    env_short_file_name['RCUTILS_CONSOLE_OUTPUT_FORMAT'] = '{short_file_name}:{line_number}'
+    env_short_file_name['RCUTILS_COLORIZED_OUTPUT'] = '0'
+    name = 'test_logging_output_format_short_file_name'
+    launch_description.add_action(ExecuteProcess(
+        cmd=[executable], env=env_short_file_name, name=name, output='screen'
+    ))
+    processes_to_test.append(name)
+
     launch_description.add_action(
         launch_testing.actions.ReadyToTest()
     )
@@ -95,9 +134,11 @@ class TestLoggingOutputFormatAfterShutdown(unittest.TestCase):
             launch_testing.asserts.assertInStderr(
                 proc_output,
                 expected_output=launch_testing.tools.expected_output_from_file(
-                    path=os.path.join(os.path.dirname(__file__), process_name)
+                    path=os.path.join(os.path.dirname(__file__), process_name),
+                    encoding='unicode_escape'
                 ),
-                process=process_name
+                process=process_name,
+                strip_ansi_escape_sequences=False
             )
 
     def test_processes_exit_codes(self, proc_info):

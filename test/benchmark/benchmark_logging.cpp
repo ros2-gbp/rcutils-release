@@ -21,13 +21,6 @@
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 #include "rcutils/logging.h"
 
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
-
 size_t g_log_calls = 0;
 struct LogEvent
 {
@@ -49,7 +42,7 @@ static void benchmark_logging(benchmark::State & state)
       ret_value = rcutils_logging_shutdown();
       (void) ret_value;
     });
-    g_rcutils_logging_default_logger_level = RCUTILS_LOG_SEVERITY_DEBUG;
+    rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_DEBUG);
 
     auto rcutils_logging_console_output_handler = [](
       const rcutils_log_location_t * location,
