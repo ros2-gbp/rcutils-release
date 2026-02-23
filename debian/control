@@ -1,0 +1,12 @@
+Source: ros-kilted-rcutils
+Section: misc
+Priority: optional
+Maintainer: Alejandro Hernandez Cordero <alejandro@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libatomic1, python3-empy, ros-kilted-ament-cmake, ros-kilted-ament-cmake-gmock <!nocheck>, ros-kilted-ament-cmake-gtest <!nocheck>, ros-kilted-ament-cmake-pytest <!nocheck>, ros-kilted-ament-cmake-ros-core, ros-kilted-ament-lint-auto <!nocheck>, ros-kilted-ament-lint-common <!nocheck>, ros-kilted-launch <!nocheck>, ros-kilted-launch-testing <!nocheck>, ros-kilted-launch-testing-ament-cmake <!nocheck>, ros-kilted-mimick-vendor <!nocheck>, ros-kilted-osrf-testing-tools-cpp <!nocheck>, ros-kilted-performance-test-fixture <!nocheck>, ros-kilted-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-kilted-rcutils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libatomic1, ros-kilted-ros-workspace
+Description: Package containing various utility types and functions for C
