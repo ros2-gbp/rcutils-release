@@ -346,7 +346,7 @@ tracks:
     - git-bloom-generate -y rosdynrpm --prefix release/:{ros_distro} :{ros_distro}
       -i :{release_inc} --require-os fedora rhel
     devel_branch: rolling
-    last_version: 7.0.9
+    last_version: 7.1.0
     name: rcutils
     patches: null
     release_inc: '1'
