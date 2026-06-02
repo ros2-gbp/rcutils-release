@@ -343,7 +343,7 @@ static const char * expand_function_name(
   (void)start_offset;
   (void)end_offset;
 
-  if (logging_input->location && logging_input->location->function_name) {
+  if (logging_input->location) {
     if (rcutils_char_array_strcat(
         logging_output,
         logging_input->location->function_name) != RCUTILS_RET_OK)
@@ -366,45 +366,10 @@ static const char * expand_file_name(
   (void)start_offset;
   (void)end_offset;
 
-  if (logging_input->location && logging_input->location->file_name) {
+  if (logging_input->location) {
     if (rcutils_char_array_strcat(
         logging_output,
         logging_input->location->file_name) != RCUTILS_RET_OK)
-    {
-      RCUTILS_SAFE_FWRITE_TO_STDERR(rcutils_get_error_string().str);
-      rcutils_reset_error();
-      RCUTILS_SAFE_FWRITE_TO_STDERR("\n");
-      return NULL;
-    }
-  }
-
-  return logging_output->buffer;
-}
-
-static const char * expand_short_file_name(
-  const logging_input_t * logging_input,
-  rcutils_char_array_t * logging_output,
-  size_t start_offset, size_t end_offset)
-{
-  (void)start_offset;
-  (void)end_offset;
-
-  if (logging_input->location && logging_input->location->file_name) {
-    const char * file_name = logging_input->location->file_name;
-    const char * basename = file_name;
-    const char * last_sep = strrchr(file_name, '/');
-    if (last_sep != NULL) {
-      basename = last_sep + 1;
-    }
-#ifdef _WIN32
-    const char * last_backslash = strrchr(file_name, '\\');
-    if (last_backslash != NULL && (last_sep == NULL || last_backslash > last_sep)) {
-      basename = last_backslash + 1;
-    }
-#endif
-    if (rcutils_char_array_strcat(
-        logging_output,
-        basename) != RCUTILS_RET_OK)
     {
       RCUTILS_SAFE_FWRITE_TO_STDERR(rcutils_get_error_string().str);
       rcutils_reset_error();
@@ -427,7 +392,6 @@ static const token_map_entry_t tokens[] = {
   {.token = "name", .handler = expand_name},
   {.token = "message", .handler = expand_message},
   {.token = "function_name", .handler = expand_function_name},
-  {.token = "short_file_name", .handler = expand_short_file_name},
   {.token = "file_name", .handler = expand_file_name},
   {.token = "time", .handler = expand_time_as_seconds},
   {.token = "date_time_with_ms", .handler = expand_time_as_date},
@@ -662,56 +626,20 @@ static void parse_and_create_handlers_list(void)
   }
 }
 
-rcutils_ret_t rcutils_logging_allocator_initialize(
-  const rcutils_allocator_t * allocator)
-{
-  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
-    allocator, "invalid allocator", return RCUTILS_RET_INVALID_ARGUMENT);
-
-  if (rcutils_allocator_is_valid(&g_rcutils_logging_allocator)) {
-    return RCUTILS_RET_OK;
-  }
-  g_rcutils_logging_allocator = *allocator;
-
-  return RCUTILS_RET_OK;
-}
-
 rcutils_ret_t rcutils_logging_initialize_with_allocator(rcutils_allocator_t allocator)
 {
   if (g_rcutils_logging_initialized) {
     return RCUTILS_RET_OK;
   }
 
-  if (rcutils_logging_allocator_initialize(&allocator) != RCUTILS_RET_OK) {
+  if (!rcutils_allocator_is_valid(&allocator)) {
+    RCUTILS_SET_ERROR_MSG("Provided allocator is invalid.");
     return RCUTILS_RET_INVALID_ARGUMENT;
   }
+  g_rcutils_logging_allocator = allocator;
 
   g_rcutils_logging_output_handler = &rcutils_logging_console_output_handler;
-  // Check for the environment variable for default logger level
-  const char * env_default_level;
-  const char * ret_str_level =
-    rcutils_get_env("RCUTILS_DEFAULT_LOGGER_DEFAULT_LEVEL", &env_default_level);
-  if (NULL != ret_str_level) {
-    RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "Error getting environment variable RCUTILS_DEFAULT_LOGGER_DEFAULT_LEVEL: %s", ret_str_level);
-    g_rcutils_logging_default_logger_level = RCUTILS_DEFAULT_LOGGER_DEFAULT_LEVEL;
-  } else if (strcmp(env_default_level, "") == 0) {
-    // Environment variable is empty, use default
-    g_rcutils_logging_default_logger_level = RCUTILS_DEFAULT_LOGGER_DEFAULT_LEVEL;
-  } else {
-    // Try to convert the environment variable value to a severity level
-    int env_severity;
-    rcutils_ret_t severity_ret = rcutils_logging_severity_level_from_string(
-      env_default_level, g_rcutils_logging_allocator, &env_severity);
-    if (severity_ret == RCUTILS_RET_OK) {
-      g_rcutils_logging_default_logger_level = env_severity;
-    } else {
-      RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "Invalid severity level '%s' in RCUTILS_DEFAULT_LOGGER_DEFAULT_LEVEL. Using default.",
-        env_default_level);
-      g_rcutils_logging_default_logger_level = RCUTILS_DEFAULT_LOGGER_DEFAULT_LEVEL;
-    }
-  }
+  g_rcutils_logging_default_logger_level = RCUTILS_DEFAULT_LOGGER_DEFAULT_LEVEL;
 
   const char * line_buffered = NULL;
   const char * ret_str = rcutils_get_env("RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED", &line_buffered);
@@ -744,6 +672,10 @@ rcutils_ret_t rcutils_logging_initialize_with_allocator(rcutils_allocator_t allo
     case RCUTILS_GET_ENV_ONE:
       g_output_stream = stdout;
       break;
+    default:
+      RCUTILS_SET_ERROR_MSG(
+        "Invalid return from environment fetch");
+      return RCUTILS_RET_ERROR;
   }
 
   // Allow the user to choose how buffering on the stream works by setting
@@ -789,6 +721,10 @@ rcutils_ret_t rcutils_logging_initialize_with_allocator(rcutils_allocator_t allo
     case RCUTILS_GET_ENV_ONE:
       g_colorized_output = RCUTILS_COLORIZED_OUTPUT_FORCE_ENABLE;
       break;
+    default:
+      RCUTILS_SET_ERROR_MSG(
+        "Invalid return from environment fetch");
+      return RCUTILS_RET_ERROR;
   }
 
   // Check for the environment variable for custom output formatting
@@ -812,7 +748,7 @@ rcutils_ret_t rcutils_logging_initialize_with_allocator(rcutils_allocator_t allo
     &g_rcutils_logging_severities_map, 2, sizeof(const char *), sizeof(int),
     rcutils_hash_map_string_hash_func, rcutils_hash_map_string_cmp_func, &allocator);
   if (hash_map_ret != RCUTILS_RET_OK) {
-    rcutils_reset_error();
+    // If an error message was set it will have been overwritten by rcutils_hash_map_init.
     RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "Failed to initialize map for logger severities [%s]. Severities will not be configurable.",
       rcutils_get_error_string().str);
@@ -866,7 +802,6 @@ rcutils_ret_t rcutils_logging_shutdown(void)
     g_rcutils_logging_severities_map_valid = false;
   }
   g_num_log_msg_handlers = 0;
-  g_rcutils_logging_allocator = rcutils_get_zero_initialized_allocator();
   g_rcutils_logging_initialized = false;
 
   #ifdef _WIN32

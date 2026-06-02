@@ -2,10 +2,38 @@ cmake_minimum_required(VERSION 3.20)
 
 project(rcutils)
 
+# Default to C11
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 11)
+endif()
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
 include(CheckLibraryExists)
 
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_ros_core REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(ament_cmake_ros REQUIRED)
+
+# By default, without the settings below, find_package(Python3) will attempt
+# to find the newest python version it can, and additionally will find the
+# most specific version.  For instance, on a system that has
+# /usr/bin/python3.10, /usr/bin/python3.11, and /usr/bin/python3, it will find
+# /usr/bin/python3.11, even if /usr/bin/python3 points to /usr/bin/python3.10.
+# The behavior we want is to prefer the "system" installed version unless the
+# user specifically tells us othewise through the Python3_EXECUTABLE hint.
+# Setting CMP0094 to NEW means that the search will stop after the first
+# python version is found.  Setting Python3_FIND_UNVERSIONED_NAMES means that
+# the search will prefer /usr/bin/python3 over /usr/bin/python3.11.  And that
+# latter functionality is only available in CMake 3.20 or later, so we need
+# at least that version.
+cmake_policy(SET CMP0094 NEW)
+set(Python3_FIND_UNVERSIONED_NAMES FIRST)
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+ament_python_install_package(${PROJECT_NAME})
 
 if(UNIX AND NOT APPLE)
   include(cmake/check_c_compiler_uses_glibc.cmake)
@@ -38,7 +66,6 @@ endif()
 set(rcutils_sources
   src/allocator.c
   src/array_list.c
-  src/base64.c
   src/char_array.c
   src/cmdline_parser.c
   src/env.c
@@ -47,7 +74,6 @@ set(rcutils_sources
   src/find.c
   src/format_string.c
   src/hash_map.c
-  src/join.c
   src/logging.c
   src/process.c
   src/qsort.c
@@ -61,7 +87,6 @@ set(rcutils_sources
   src/strerror.c
   src/string_array.c
   src/string_map.c
-  src/strnlen.c
   src/testing/fault_injection.c
   src/time.c
   ${time_impl_c}
@@ -71,11 +96,46 @@ set_source_files_properties(
   ${rcutils_sources}
   PROPERTIES language "C")
 
+# "watch" template/inputs for changes
+configure_file(
+  "resource/logging_macros.h.em"
+  "logging_macros.h.em.watch"
+  COPYONLY)
+configure_file(
+  "rcutils/logging.py"
+  "logging.py.watch"
+  COPYONLY)
+# generate header with logging macros
+set(rcutils_module_path ${CMAKE_CURRENT_SOURCE_DIR})
+set(python_code
+  "import em"  # implicitly added ; between python statements due to CMake list
+  "\
+em.invoke( \
+  [ \
+    '-o', 'include/rcutils/logging_macros.h', \
+    '-D', 'rcutils_module_path=\"${rcutils_module_path}\"', \
+    '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging_macros.h.em' \
+  ] \
+)")
+string(REPLACE ";" "$<SEMICOLON>" python_code "${python_code}")
+add_custom_command(OUTPUT include/rcutils/logging_macros.h
+  COMMAND ${CMAKE_COMMAND} -E make_directory "include/rcutils"
+  COMMAND Python3::Interpreter ARGS -c "${python_code}"
+  DEPENDS
+    "${CMAKE_CURRENT_BINARY_DIR}/logging_macros.h.em.watch"
+    "${CMAKE_CURRENT_BINARY_DIR}/logging.py.watch"
+  COMMENT "Expanding logging_macros.h.em"
+  VERBATIM
+)
+list(APPEND rcutils_sources
+  include/rcutils/logging_macros.h)
+
 add_library(
   ${PROJECT_NAME}
   ${rcutils_sources})
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -86,21 +146,14 @@ if(BUILD_TESTING AND NOT RCUTILS_DISABLE_FAULT_INJECTION)
   target_compile_definitions(${PROJECT_NAME} PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
 endif()
 
-target_link_libraries(${PROJECT_NAME}
-  ${CMAKE_DL_LIBS}
-  ament_cmake_ros_core::ament_ros_defaults
-)
+target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 
 check_library_exists(atomic __atomic_load_8 "" HAVE_LIBATOMICS)
 
-if(HAVE_LIBATOMICS AND NOT WIN32)
-  # Link libatomic into rcutils for fault injection atomic operations.
-  # Don't export it - downstream packages get atomic symbols transitively
-  # through librcutils.so. See https://github.com/ros2/rcutils/issues/525
-  target_link_libraries(${PROJECT_NAME}
-    atomic
-    ament_cmake_ros_core::ament_ros_defaults
-  )
+if(HAVE_LIBATOMICS AND NOT WIN32 AND NOT APPLE)
+  # Exporting link flag since it won't pass ament_export_libraries() existence check
+  ament_export_link_flags("-latomic")
+  target_link_libraries(${PROJECT_NAME} atomic)
 endif()
 
 # Needed if pthread is used for thread local storage.
@@ -115,8 +168,10 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
 
 if(BUILD_TESTING)
   find_package(performance_test_fixture REQUIRED)
+
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_pytest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   # cppcheck 1.90 doesn't understand some of the syntax in remove_noexcept.hpp
   # Since we already have cppcheck disabled on Linux, just disable it completely
@@ -128,6 +183,27 @@ if(BUILD_TESTING)
 
   find_package(launch_testing_ament_cmake REQUIRED)
 
+  if(ament_cmake_cppcheck_FOUND)
+    ament_cppcheck(
+      TESTNAME "cppcheck_logging_macros"
+      "${CMAKE_CURRENT_BINARY_DIR}/include/rcutils/logging_macros.h")
+  endif()
+  if(ament_cmake_cpplint_FOUND)
+    ament_cpplint(
+      TESTNAME "cpplint_logging_macros"
+      # the generated code might contain longer lines for templated types
+      MAX_LINE_LENGTH 999
+      ROOT "${CMAKE_CURRENT_BINARY_DIR}/include"
+      "${CMAKE_CURRENT_BINARY_DIR}/include/rcutils/logging_macros.h")
+  endif()
+  if(ament_cmake_uncrustify_FOUND)
+    ament_uncrustify(
+      TESTNAME "uncrustify_logging_macros"
+      # the generated code might contain longer lines for templated types
+      MAX_LINE_LENGTH 0
+      "${CMAKE_CURRENT_BINARY_DIR}/include/rcutils/logging_macros.h")
+  endif()
+
   find_package(mimick_vendor REQUIRED)
 
   find_package(osrf_testing_tools_cpp REQUIRED)
@@ -137,17 +213,10 @@ if(BUILD_TESTING)
     osrf_testing_tools_cpp::memory_tools LIBRARY_PRELOAD_ENVIRONMENT_IS_AVAILABLE)
 
   ament_add_gtest(test_logging test/test_logging.cpp)
-  target_link_libraries(test_logging
-    ${PROJECT_NAME}
-    osrf_testing_tools_cpp::memory_tools
-    ament_cmake_ros_core::ament_ros_defaults
-  )
+  target_link_libraries(test_logging ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
 
   add_executable(test_logging_long_messages test/test_logging_long_messages.cpp)
-  target_link_libraries(test_logging_long_messages
-    ${PROJECT_NAME}
-    ament_cmake_ros_core::ament_ros_defaults
-  )
+  target_link_libraries(test_logging_long_messages ${PROJECT_NAME})
   add_launch_test(
     "test/test_logging_long_messages.py"
     TARGET test_logging_long_messages
@@ -163,16 +232,10 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_logging_macros test/test_logging_macros.cpp)
-  target_link_libraries(test_logging_macros
-    ${PROJECT_NAME}
-    ament_cmake_ros_core::ament_ros_defaults
-  )
+  target_link_libraries(test_logging_macros ${PROJECT_NAME})
 
   add_executable(test_logging_macros_c test/test_logging_macros.c)
-  target_link_libraries(test_logging_macros_c
-    ${PROJECT_NAME}
-    ament_cmake_ros_core::ament_ros_defaults
-  )
+  target_link_libraries(test_logging_macros_c ${PROJECT_NAME})
   ament_add_test(test_logging_macros_c
     COMMAND "$<TARGET_FILE:test_logging_macros_c>"
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO)
@@ -188,21 +251,14 @@ if(BUILD_TESTING)
     ${SKIP_MEMORY_TOOLS_TEST}
   )
   if(TARGET test_allocator)
-    target_link_libraries(test_allocator
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_allocator ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
   ament_add_gtest(test_char_array
     test/test_char_array.cpp
   )
   if(TARGET test_char_array)
-    target_link_libraries(test_char_array
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_char_array ${PROJECT_NAME})
   endif()
 
   # Can't use C++ with stdatomic_helper.h
@@ -213,15 +269,9 @@ if(BUILD_TESTING)
     PROPERTIES
       LANGUAGE C
   )
-  target_link_libraries(test_atomics_executable
-    ${PROJECT_NAME}
-    ament_cmake_ros_core::ament_ros_defaults
-  )
+  target_link_libraries(test_atomics_executable ${PROJECT_NAME})
   if(HAVE_LIBATOMICS)
-    target_link_libraries(test_atomics_executable
-      atomic
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_atomics_executable atomic)
   endif()
 
   add_test(NAME test_atomics COMMAND test_atomics_executable)
@@ -232,11 +282,7 @@ if(BUILD_TESTING)
     ENV ${memory_tools_test_env_vars}
   )
   if(TARGET test_error_handling)
-    target_link_libraries(test_error_handling
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_error_handling ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
   ament_add_gmock(test_error_handling_helpers test/test_error_handling_helpers.cpp
@@ -246,63 +292,35 @@ if(BUILD_TESTING)
   )
   if(TARGET test_error_handling_helpers)
     target_include_directories(test_error_handling_helpers PUBLIC include)
-    target_link_libraries(test_error_handling_helpers
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_error_handling_helpers osrf_testing_tools_cpp::memory_tools)
   endif()
 
   ament_add_gtest(test_split
     test/test_split.cpp
   )
   if(TARGET test_split)
-    target_link_libraries(test_split
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
-  endif()
-
-  ament_add_gtest(test_join
-    test/test_join.cpp
-  )
-  if(TARGET test_join)
-    target_link_libraries(test_join
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_split ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_find
     test/test_find.cpp
   )
   if(TARGET test_find)
-    target_link_libraries(test_find
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_find ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_strerror
     test/test_strerror.cpp
   )
-  ament_add_test_label(test_strerror mimick)
   if(TARGET test_strerror)
-    target_link_libraries(test_strerror
-      ${PROJECT_NAME}
-      mimick
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_strerror ${PROJECT_NAME} mimick)
   endif()
 
   ament_add_gtest(test_string_array
     test/test_string_array.cpp
   )
   if(TARGET test_string_array)
-    target_link_libraries(test_string_array
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_string_array ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_env test/test_env.cpp
@@ -312,24 +330,15 @@ if(BUILD_TESTING)
     APPEND_LIBRARY_DIRS "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
   )
   if(TARGET test_env)
-    target_link_libraries(test_env
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_env ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_filesystem
     test/test_filesystem.cpp
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
-  ament_add_test_label(test_filesystem mimick)
   if(TARGET test_filesystem)
-    target_link_libraries(test_filesystem
-      ${PROJECT_NAME}
-      mimick
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_filesystem ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
     target_compile_definitions(test_filesystem PRIVATE BUILD_DIR="${CMAKE_CURRENT_BINARY_DIR}")
   endif()
 
@@ -337,41 +346,28 @@ if(BUILD_TESTING)
     test/test_strdup.cpp
   )
   if(TARGET test_strdup)
-    target_link_libraries(test_strdup
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_strdup ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_format_string
     test/test_format_string.cpp
   )
   if(TARGET test_format_string)
-    target_link_libraries(test_format_string
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_format_string ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_string_map
     test/test_string_map.cpp
   )
   if(TARGET test_string_map)
-    target_link_libraries(test_string_map
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_string_map ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
   ament_add_gtest(test_isalnum_no_locale
     test/test_isalnum_no_locale.cpp
   )
   if(TARGET test_isalnum_no_locale)
-    target_link_libraries(test_isalnum_no_locale
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_isalnum_no_locale ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_repl_str
@@ -379,20 +375,14 @@ if(BUILD_TESTING)
     TIMEOUT 300
   )
   if(TARGET test_repl_str)
-    target_link_libraries(test_repl_str
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_repl_str ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_sha256
     test/test_sha256.cpp
   )
   if(TARGET test_sha256)
-    target_link_libraries(test_sha256
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_sha256 ${PROJECT_NAME})
   endif()
 
   macro(add_dummy_shared_library target)
@@ -415,10 +405,7 @@ if(BUILD_TESTING)
       # documentation says otherwise, so here we fallback to DT_RPATH entries.
       target_link_libraries(test_shared_library_in_run_paths "-Wl,--disable-new-dtags")
     endif()
-    target_link_libraries(test_shared_library_in_run_paths
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_shared_library_in_run_paths ${PROJECT_NAME})
   endif()
 
   set(project_binary_dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
@@ -435,10 +422,7 @@ if(BUILD_TESTING)
       LIBRARY_OUTPUT_DIRECTORY ${test_libraries_dir})
     target_compile_definitions(test_shared_library_in_load_paths PRIVATE
       "SHARED_LIBRARY_UNDER_TEST=dummy_shared_library_in_load_paths")
-    target_link_libraries(test_shared_library_in_load_paths
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_shared_library_in_load_paths ${PROJECT_NAME})
   endif()
 
   include(CheckCXXCompilerFlag)
@@ -471,95 +455,63 @@ if(BUILD_TESTING)
       endif()
     endif()
     target_link_libraries(test_shared_library_preloaded dummy_shared_library_preloaded)
-    target_link_libraries(test_shared_library_preloaded
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults)
+    target_link_libraries(test_shared_library_preloaded ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_time
     test/test_time.cpp
     ENV ${memory_tools_test_env_vars})
-  ament_add_test_label(test_time mimick)
   if(TARGET test_time)
-    target_link_libraries(test_time
-      ${PROJECT_NAME}
-      mimick
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_time ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
   endif()
 
   ament_add_gtest(test_snprintf
     test/test_snprintf.cpp
   )
   if(TARGET test_snprintf)
-    target_link_libraries(test_snprintf
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_snprintf ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_strcasecmp
     test/test_strcasecmp.cpp
   )
   if(TARGET test_strcasecmp)
-    target_link_libraries(test_strcasecmp
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_strcasecmp ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_uint8_array
     test/test_uint8_array.cpp
   )
   if(TARGET test_uint8_array)
-    target_link_libraries(test_uint8_array
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_uint8_array ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_array_list
     test/test_array_list.cpp
   )
   if(TARGET test_array_list)
-    target_link_libraries(test_array_list
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_array_list ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_hash_map
     test/test_hash_map.cpp
   )
   if(TARGET test_hash_map)
-    target_link_libraries(test_hash_map
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_hash_map ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_cmdline_parser
     test/test_cmdline_parser.cpp
   )
   if(TARGET test_cmdline_parser)
-    target_link_libraries(test_cmdline_parser
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_cmdline_parser ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_process
     test/test_process.cpp
   )
   if(TARGET test_process)
-    target_link_libraries(test_process
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
-    target_compile_definitions(test_process PRIVATE
-      "CMAKE_COMMAND=${CMAKE_COMMAND}")
-    file(TOUCH "${CMAKE_CURRENT_BINARY_DIR}/file with space.txt")
+    target_link_libraries(test_process ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_logging_custom_env test/test_logging_custom_env.cpp
@@ -571,14 +523,8 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_USE_STDOUT=1
       RCUTILS_COLORIZED_OUTPUT=1
   )
-  ament_add_test_label(test_logging_custom_env mimick)
   if(TARGET test_logging_custom_env)
-    target_link_libraries(test_logging_custom_env
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      mimick
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_logging_custom_env ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools mimick)
   endif()
 
   # RCUTILS_LOGGING_MAX_OUTPUT_FORMAT_LEN is defined as 2048, truncation should occur
@@ -594,14 +540,8 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_USE_STDOUT=0
       RCUTILS_COLORIZED_OUTPUT=0
   )
-  ament_add_test_label(test_logging_custom_env2 mimick)
   if(TARGET test_logging_custom_env2)
-    target_link_libraries(test_logging_custom_env2
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      mimick
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_logging_custom_env2 ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools mimick)
   endif()
 
   ament_add_gtest(test_logging_bad_env test/test_logging_bad_env.cpp
@@ -609,10 +549,7 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_USE_STDOUT=42
   )
   if(TARGET test_logging_bad_env)
-    target_link_libraries(test_logging_bad_env
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_logging_bad_env ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_logging_bad_env2 test/test_logging_bad_env.cpp
@@ -620,10 +557,7 @@ if(BUILD_TESTING)
       RCUTILS_COLORIZED_OUTPUT=42
   )
   if(TARGET test_logging_bad_env2)
-    target_link_libraries(test_logging_bad_env2
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_logging_bad_env2 ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_logging_bad_env3 test/test_logging_bad_env.cpp
@@ -631,70 +565,52 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_BUFFERED_STREAM=42
   )
   if(TARGET test_logging_bad_env3)
-    target_link_libraries(test_logging_bad_env3
-      ${PROJECT_NAME}
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_logging_bad_env3 ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_logging_enable_for
     test/test_logging_enable_for.cpp
   )
   if(TARGET test_logging_enable_for)
-    target_link_libraries(test_logging_enable_for
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_logging_enable_for ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
   ament_add_gtest(test_logging_console_output_handler
     test/test_logging_console_output_handler.cpp
   )
   if(TARGET test_logging_console_output_handler)
-    target_link_libraries(test_logging_console_output_handler
-      ${PROJECT_NAME}
-      osrf_testing_tools_cpp::memory_tools
-      ament_cmake_ros_core::ament_ros_defaults
-    )
+    target_link_libraries(test_logging_console_output_handler ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
   ament_add_gtest(test_macros
     test/test_macros.cpp
   )
   if(TARGET test_macros)
-    target_link_libraries(test_macros ${PROJECT_NAME} ament_cmake_ros_core::ament_ros_defaults)
+    target_link_libraries(test_macros ${PROJECT_NAME})
   endif()
 
   add_performance_test(benchmark_logging test/benchmark/benchmark_logging.cpp)
   if(TARGET benchmark_logging)
-    target_link_libraries(benchmark_logging ${PROJECT_NAME} ament_cmake_ros_core::ament_ros_defaults)
+    target_link_libraries(benchmark_logging ${PROJECT_NAME})
   endif()
 
   add_performance_test(benchmark_err_handle test/benchmark/benchmark_error_handling.cpp)
   if(TARGET benchmark_err_handle)
-    target_link_libraries(benchmark_err_handle ${PROJECT_NAME} ament_cmake_ros_core::ament_ros_defaults)
-  endif()
-
-  ament_add_gtest(test_base64
-    test/test_base64.cpp
-  )
-  if(TARGET test_base64)
-    target_link_libraries(test_base64 ${PROJECT_NAME} ament_cmake_ros_core::ament_ros_defaults)
+    target_link_libraries(benchmark_err_handle ${PROJECT_NAME})
   endif()
 endif()
 
 # Export old-style CMake variables
 ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(${PROJECT_NAME})
+ament_export_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
 
-ament_export_dependencies(ament_cmake ament_cmake_ros_core)
+ament_export_dependencies(ament_cmake)
 
 ament_package()
 
 install(
-  DIRECTORY include/
+  DIRECTORY include/ ${CMAKE_CURRENT_BINARY_DIR}/include/
   DESTINATION include/${PROJECT_NAME})
