@@ -21,13 +21,7 @@
 rcutils_char_array_t
 rcutils_get_zero_initialized_char_array(void)
 {
-  static rcutils_char_array_t char_array = {
-    .buffer = NULL,
-    .owns_buffer = true,
-    .buffer_length = 0u,
-    .buffer_capacity = 0u
-  };
-  char_array.allocator = rcutils_get_zero_initialized_allocator();
+  static rcutils_char_array_t char_array = {0};
   return char_array;
 }
 
@@ -178,7 +172,7 @@ rcutils_char_array_vsprintf(rcutils_char_array_t * char_array, const char * form
   if (new_size > char_array->buffer_capacity) {
     rcutils_ret_t ret = rcutils_char_array_expand_as_needed(char_array, new_size);
     if (ret != RCUTILS_RET_OK) {
-      RCUTILS_SET_ERROR_MSG("char array failed to expand");
+      // rcutils_char_array_expand_as_needed already set the error
       return ret;
     }
 
@@ -202,7 +196,7 @@ rcutils_char_array_memcpy(rcutils_char_array_t * char_array, const char * src, s
 {
   rcutils_ret_t ret = rcutils_char_array_expand_as_needed(char_array, n);
   if (ret != RCUTILS_RET_OK) {
-    RCUTILS_SET_ERROR_MSG("char array failed to expand");
+    // rcutils_char_array_expand_as needed already set the error
     return ret;
   }
   memcpy(char_array->buffer, src, n);
@@ -229,7 +223,7 @@ rcutils_char_array_strncat(rcutils_char_array_t * char_array, const char * src, 
   size_t new_length = current_strlen + n + 1;
   rcutils_ret_t ret = rcutils_char_array_expand_as_needed(char_array, new_length);
   if (ret != RCUTILS_RET_OK) {
-    RCUTILS_SET_ERROR_MSG("char array failed to expand");
+    // rcutils_char_array_expand_as_needed already set the error
     return ret;
   }
 

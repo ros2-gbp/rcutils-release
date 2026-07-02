@@ -31,14 +31,12 @@
 #define RCUTILS_WARN_ON_TRUNCATION 1
 #endif
 
-#ifndef __STDC_WANT_LIB_EXT1__
-#define __STDC_WANT_LIB_EXT1__ 1  // indicate we would like memmove_s if available
-#endif
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <rcutils/error_handling.h>
+#include <rcutils/strnlen.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -130,7 +128,7 @@ __rcutils_convert_uint64_t_into_c_str(uint64_t number, char * buffer, size_t buf
   buffer[i] = '\0';
 
   // reverse the string in place
-  __rcutils_reverse_str(buffer, strnlen(buffer, 21));
+  __rcutils_reverse_str(buffer, rcutils_strnlen(buffer, 21));
 }
 
 // do not use externally, internal function which is only to be used by error_handling.c
