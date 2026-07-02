@@ -16,7 +16,6 @@
 
 #include <chrono>
 #include <cinttypes>
-#include <iomanip>
 #include <thread>
 
 #include "osrf_testing_tools_cpp/memory_tools/memory_tools.hpp"

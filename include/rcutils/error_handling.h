@@ -22,6 +22,9 @@ extern "C"
 {
 #endif
 
+#ifndef __STDC_WANT_LIB_EXT1__
+#define __STDC_WANT_LIB_EXT1__ 1  // indicate we would like strnlen_s if available
+#endif
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -33,18 +36,23 @@ extern "C"
 #include "rcutils/allocator.h"
 #include "rcutils/macros.h"
 #include "rcutils/snprintf.h"
-#include "rcutils/strnlen.h"
 #include "rcutils/testing/fault_injection.h"
 #include "rcutils/types/rcutils_ret.h"
 #include "rcutils/visibility_control.h"
 
+#ifdef __STDC_LIB_EXT1__
 /// Write the given msg out to stderr, limiting the buffer size in the `fwrite`.
 /**
  * This ensures that there is an upper bound to a buffer overrun if `msg` is
  * non-null terminated.
  */
 #define RCUTILS_SAFE_FWRITE_TO_STDERR(msg) \
-  do {fwrite(msg, sizeof(char), rcutils_strnlen(msg, 4096), stderr);} while (0)
+  do {fwrite(msg, sizeof(char), strnlen_s(msg, 4096), stderr);} while (0)
+#else
+/// Write the given msg out to stderr.
+#define RCUTILS_SAFE_FWRITE_TO_STDERR(msg) \
+  do {fwrite(msg, sizeof(char), strlen(msg), stderr);} while (0)
+#endif
 
 /// Set the error message to stderr using a format string and format arguments.
 /**
@@ -58,9 +66,8 @@ extern "C"
 #define RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING(format_string, ...) \
   do { \
     char output_msg[RCUTILS_ERROR_MESSAGE_MAX_LENGTH]; \
-    int __rcutils_snprintf_ret = \
-      rcutils_snprintf(output_msg, sizeof(output_msg), format_string, __VA_ARGS__); \
-    if (__rcutils_snprintf_ret < 0) { \
+    int ret = rcutils_snprintf(output_msg, sizeof(output_msg), format_string, __VA_ARGS__); \
+    if (ret < 0) { \
       RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to call snprintf for error message formatting\n"); \
     } else { \
       RCUTILS_SAFE_FWRITE_TO_STDERR(output_msg); \
@@ -241,9 +248,8 @@ rcutils_set_error_state(const char * error_string, const char * file, size_t lin
 #define RCUTILS_SET_ERROR_MSG_WITH_FORMAT_STRING(format_string, ...) \
   do { \
     char output_msg[RCUTILS_ERROR_MESSAGE_MAX_LENGTH]; \
-    int __rcutils_snprintf_ret = \
-      rcutils_snprintf(output_msg, sizeof(output_msg), format_string, __VA_ARGS__); \
-    if (__rcutils_snprintf_ret < 0) { \
+    int ret = rcutils_snprintf(output_msg, sizeof(output_msg), format_string, __VA_ARGS__); \
+    if (ret < 0) { \
       RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to call snprintf for error message formatting\n"); \
     } else { \
       RCUTILS_SET_ERROR_MSG(output_msg); \
