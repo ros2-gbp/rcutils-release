@@ -1,3 +1,26 @@
+## rcutils (lyrical) - 7.1.2-1
+
+The packages in the `rcutils` repository were released into the `lyrical` distro by running `/usr/bin/bloom-release --rosdistro lyrical --track lyrical rcutils` on `Thu, 02 Jul 2026 09:24:06 -0000`
+
+The `rcutils` package was released.
+
+Version of package(s) in repository `rcutils`:
+
+- upstream repository: https://github.com/ros2/rcutils.git
+- release repository: https://github.com/ros2-gbp/rcutils-release.git
+- rosdistro version: `7.1.1-3`
+- old version: `7.1.1-3`
+- new version: `7.1.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.14.3`
+- catkin_pkg version: `1.1.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## rcutils (rolling) - 7.2.1-1
 
 The packages in the `rcutils` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling --track rolling rcutils` on `Thu, 02 Jul 2026 09:21:37 -0000`
