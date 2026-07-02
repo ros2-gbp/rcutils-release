@@ -81,6 +81,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME} PRIVATE "RCUTILS_BUILDING_DLL")
+target_compile_definitions(${PROJECT_NAME} PUBLIC __STDC_WANT_LIB_EXT1__=1)
 
 if(BUILD_TESTING AND NOT RCUTILS_DISABLE_FAULT_INJECTION)
   target_compile_definitions(${PROJECT_NAME} PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
@@ -93,7 +94,7 @@ target_link_libraries(${PROJECT_NAME}
 
 check_library_exists(atomic __atomic_load_8 "" HAVE_LIBATOMICS)
 
-if(HAVE_LIBATOMICS AND NOT WIN32)
+if(HAVE_LIBATOMICS AND NOT WIN32 AND NOT APPLE)
   # Link libatomic into rcutils for fault injection atomic operations.
   # Don't export it - downstream packages get atomic symbols transitively
   # through librcutils.so. See https://github.com/ros2/rcutils/issues/525
