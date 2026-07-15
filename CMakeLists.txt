@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.12)
 
 project(rcutils)
 
@@ -6,31 +6,15 @@ project(rcutils)
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 11)
 endif()
-# Default to C++17
+# Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 
 include(CheckLibraryExists)
 
-find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
-find_package(ament_cmake_ros_core REQUIRED)
-
-# By default, without the settings below, find_package(Python3) will attempt
-# to find the newest python version it can, and additionally will find the
-# most specific version.  For instance, on a system that has
-# /usr/bin/python3.10, /usr/bin/python3.11, and /usr/bin/python3, it will find
-# /usr/bin/python3.11, even if /usr/bin/python3 points to /usr/bin/python3.10.
-# The behavior we want is to prefer the "system" installed version unless the
-# user specifically tells us othewise through the Python3_EXECUTABLE hint.
-# Setting CMP0094 to NEW means that the search will stop after the first
-# python version is found.  Setting Python3_FIND_UNVERSIONED_NAMES means that
-# the search will prefer /usr/bin/python3 over /usr/bin/python3.11.  And that
-# latter functionality is only available in CMake 3.20 or later, so we need
-# at least that version.
-cmake_policy(SET CMP0094 NEW)
-set(Python3_FIND_UNVERSIONED_NAMES FIRST)
+find_package(ament_cmake_ros REQUIRED)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
@@ -75,12 +59,10 @@ set(rcutils_sources
   src/find.c
   src/format_string.c
   src/hash_map.c
-  src/join.c
   src/logging.c
   src/process.c
   src/qsort.c
   src/repl_str.c
-  src/sha256.c
   src/shared_library.c
   src/snprintf.c
   src/split.c
@@ -152,7 +134,7 @@ target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 
 check_library_exists(atomic __atomic_load_8 "" HAVE_LIBATOMICS)
 
-if(HAVE_LIBATOMICS AND NOT WIN32 AND NOT APPLE)
+if(HAVE_LIBATOMICS AND NOT WIN32)
   # Exporting link flag since it won't pass ament_export_libraries() existence check
   ament_export_link_flags("-latomic")
   target_link_libraries(${PROJECT_NAME} atomic)
@@ -169,18 +151,16 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   RUNTIME DESTINATION bin)
 
 if(BUILD_TESTING)
+  if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  endif()
+
   find_package(performance_test_fixture REQUIRED)
 
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
-  # cppcheck 1.90 doesn't understand some of the syntax in remove_noexcept.hpp
-  # Since we already have cppcheck disabled on Linux, just disable it completely
-  # for this package.
-  list(APPEND AMENT_LINT_AUTO_EXCLUDE
-    ament_cmake_cppcheck
-  )
   ament_lint_auto_find_test_dependencies()
 
   find_package(launch_testing_ament_cmake REQUIRED)
@@ -215,7 +195,7 @@ if(BUILD_TESTING)
     osrf_testing_tools_cpp::memory_tools LIBRARY_PRELOAD_ENVIRONMENT_IS_AVAILABLE)
 
   ament_add_gtest(test_logging test/test_logging.cpp)
-  target_link_libraries(test_logging ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
+  target_link_libraries(test_logging ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
 
   add_executable(test_logging_long_messages test/test_logging_long_messages.cpp)
   target_link_libraries(test_logging_long_messages ${PROJECT_NAME})
@@ -247,8 +227,16 @@ if(BUILD_TESTING)
     set(SKIP_MEMORY_TOOLS_TEST "SKIP_TEST")
   endif()
 
+  macro(rcutils_custom_add_gtest target)
+    ament_add_gtest(${target} ${ARGN})
+  endmacro()
+
+  macro(rcutils_custom_add_gmock target)
+    ament_add_gmock(${target} ${ARGN})
+  endmacro()
+
   # Gtests
-  ament_add_gtest(test_allocator test/test_allocator.cpp
+  rcutils_custom_add_gtest(test_allocator test/test_allocator.cpp
     ENV ${memory_tools_test_env_vars}
     ${SKIP_MEMORY_TOOLS_TEST}
   )
@@ -256,11 +244,11 @@ if(BUILD_TESTING)
     target_link_libraries(test_allocator ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
-  ament_add_gtest(test_char_array
+  rcutils_custom_add_gtest(test_char_array
     test/test_char_array.cpp
   )
   if(TARGET test_char_array)
-    target_link_libraries(test_char_array ${PROJECT_NAME})
+    target_link_libraries(test_char_array ${PROJECT_NAME} mimick)
   endif()
 
   # Can't use C++ with stdatomic_helper.h
@@ -278,7 +266,7 @@ if(BUILD_TESTING)
 
   add_test(NAME test_atomics COMMAND test_atomics_executable)
 
-  ament_add_gmock(test_error_handling test/test_error_handling.cpp
+  rcutils_custom_add_gmock(test_error_handling test/test_error_handling.cpp
     # Append the directory of librcutils so it is found at test time.
     APPEND_LIBRARY_DIRS "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     ENV ${memory_tools_test_env_vars}
@@ -287,7 +275,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_error_handling ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
-  ament_add_gmock(test_error_handling_helpers test/test_error_handling_helpers.cpp
+  rcutils_custom_add_gmock(test_error_handling_helpers test/test_error_handling_helpers.cpp
     # Append the directory of librcutils so it is found at test time.
     APPEND_LIBRARY_DIRS "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
     ENV ${memory_tools_test_env_vars}
@@ -297,43 +285,35 @@ if(BUILD_TESTING)
     target_link_libraries(test_error_handling_helpers osrf_testing_tools_cpp::memory_tools)
   endif()
 
-  ament_add_gtest(test_split
+  rcutils_custom_add_gtest(test_split
     test/test_split.cpp
   )
   if(TARGET test_split)
-    target_link_libraries(test_split ${PROJECT_NAME})
+    target_link_libraries(test_split ${PROJECT_NAME} mimick)
   endif()
 
-  ament_add_gtest(test_join
-    test/test_join.cpp
-  )
-  if(TARGET test_join)
-    target_link_libraries(test_join ${PROJECT_NAME})
-  endif()
-
-  ament_add_gtest(test_find
+  rcutils_custom_add_gtest(test_find
     test/test_find.cpp
   )
   if(TARGET test_find)
     target_link_libraries(test_find ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_strerror
+  rcutils_custom_add_gtest(test_strerror
     test/test_strerror.cpp
   )
-  ament_add_test_label(test_strerror mimick)
   if(TARGET test_strerror)
     target_link_libraries(test_strerror ${PROJECT_NAME} mimick)
   endif()
 
-  ament_add_gtest(test_string_array
+  rcutils_custom_add_gtest(test_string_array
     test/test_string_array.cpp
   )
   if(TARGET test_string_array)
     target_link_libraries(test_string_array ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_env test/test_env.cpp
+  rcutils_custom_add_gtest(test_env test/test_env.cpp
     ENV
       EMPTY_TEST=
       NORMAL_TEST=foo
@@ -343,57 +323,50 @@ if(BUILD_TESTING)
     target_link_libraries(test_env ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_filesystem
+  rcutils_custom_add_gtest(test_filesystem
     test/test_filesystem.cpp
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
-  ament_add_test_label(test_filesystem mimick)
   if(TARGET test_filesystem)
-    target_link_libraries(test_filesystem ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
+    ament_target_dependencies(test_filesystem "osrf_testing_tools_cpp")
+    target_link_libraries(test_filesystem ${PROJECT_NAME} mimick)
     target_compile_definitions(test_filesystem PRIVATE BUILD_DIR="${CMAKE_CURRENT_BINARY_DIR}")
   endif()
 
-  ament_add_gtest(test_strdup
+  rcutils_custom_add_gtest(test_strdup
     test/test_strdup.cpp
   )
   if(TARGET test_strdup)
     target_link_libraries(test_strdup ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_format_string
+  rcutils_custom_add_gtest(test_format_string
     test/test_format_string.cpp
   )
   if(TARGET test_format_string)
-    target_link_libraries(test_format_string ${PROJECT_NAME})
+    target_link_libraries(test_format_string ${PROJECT_NAME} mimick)
   endif()
 
-  ament_add_gtest(test_string_map
+  rcutils_custom_add_gtest(test_string_map
     test/test_string_map.cpp
   )
   if(TARGET test_string_map)
-    target_link_libraries(test_string_map ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
+    ament_target_dependencies(test_string_map "osrf_testing_tools_cpp")
+    target_link_libraries(test_string_map ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_isalnum_no_locale
+  rcutils_custom_add_gtest(test_isalnum_no_locale
     test/test_isalnum_no_locale.cpp
   )
   if(TARGET test_isalnum_no_locale)
     target_link_libraries(test_isalnum_no_locale ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_repl_str
+  rcutils_custom_add_gtest(test_repl_str
     test/test_repl_str.cpp
-    TIMEOUT 300
   )
   if(TARGET test_repl_str)
     target_link_libraries(test_repl_str ${PROJECT_NAME})
-  endif()
-
-  ament_add_gtest(test_sha256
-    test/test_sha256.cpp
-  )
-  if(TARGET test_sha256)
-    target_link_libraries(test_sha256 ${PROJECT_NAME})
   endif()
 
   macro(add_dummy_shared_library target)
@@ -416,7 +389,7 @@ if(BUILD_TESTING)
       # documentation says otherwise, so here we fallback to DT_RPATH entries.
       target_link_libraries(test_shared_library_in_run_paths "-Wl,--disable-new-dtags")
     endif()
-    target_link_libraries(test_shared_library_in_run_paths ${PROJECT_NAME})
+    target_link_libraries(test_shared_library_in_run_paths ${PROJECT_NAME} mimick)
   endif()
 
   set(project_binary_dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
@@ -433,7 +406,7 @@ if(BUILD_TESTING)
       LIBRARY_OUTPUT_DIRECTORY ${test_libraries_dir})
     target_compile_definitions(test_shared_library_in_load_paths PRIVATE
       "SHARED_LIBRARY_UNDER_TEST=dummy_shared_library_in_load_paths")
-    target_link_libraries(test_shared_library_in_load_paths ${PROJECT_NAME})
+    target_link_libraries(test_shared_library_in_load_paths ${PROJECT_NAME} mimick)
   endif()
 
   include(CheckCXXCompilerFlag)
@@ -466,70 +439,66 @@ if(BUILD_TESTING)
       endif()
     endif()
     target_link_libraries(test_shared_library_preloaded dummy_shared_library_preloaded)
-    target_link_libraries(test_shared_library_preloaded ${PROJECT_NAME})
+    target_link_libraries(test_shared_library_preloaded ${PROJECT_NAME} mimick)
   endif()
 
-  ament_add_gtest(test_time
+  rcutils_custom_add_gtest(test_time
     test/test_time.cpp
     ENV ${memory_tools_test_env_vars})
-  ament_add_test_label(test_time mimick)
   if(TARGET test_time)
     target_link_libraries(test_time ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools)
   endif()
 
-  ament_add_gtest(test_snprintf
+  rcutils_custom_add_gtest(test_snprintf
     test/test_snprintf.cpp
   )
   if(TARGET test_snprintf)
     target_link_libraries(test_snprintf ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_strcasecmp
+  rcutils_custom_add_gtest(test_strcasecmp
     test/test_strcasecmp.cpp
   )
   if(TARGET test_strcasecmp)
     target_link_libraries(test_strcasecmp ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_uint8_array
+  rcutils_custom_add_gtest(test_uint8_array
     test/test_uint8_array.cpp
   )
   if(TARGET test_uint8_array)
     target_link_libraries(test_uint8_array ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_array_list
+  rcutils_custom_add_gtest(test_array_list
     test/test_array_list.cpp
   )
   if(TARGET test_array_list)
     target_link_libraries(test_array_list ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_hash_map
+  rcutils_custom_add_gtest(test_hash_map
     test/test_hash_map.cpp
   )
   if(TARGET test_hash_map)
     target_link_libraries(test_hash_map ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_cmdline_parser
+  rcutils_custom_add_gtest(test_cmdline_parser
     test/test_cmdline_parser.cpp
   )
   if(TARGET test_cmdline_parser)
     target_link_libraries(test_cmdline_parser ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_process
+  rcutils_custom_add_gtest(test_process
     test/test_process.cpp
   )
   if(TARGET test_process)
     target_link_libraries(test_process ${PROJECT_NAME})
-    target_compile_definitions(test_process PRIVATE
-      "CMAKE_COMMAND=${CMAKE_COMMAND}")
-    file(TOUCH "${CMAKE_CURRENT_BINARY_DIR}/file with space.txt")
   endif()
 
-  ament_add_gtest(test_logging_custom_env test/test_logging_custom_env.cpp
+  rcutils_custom_add_gtest(test_logging_custom_env test/test_logging_custom_env.cpp
     ENV
       RCUTILS_CONSOLE_OUTPUT_FORMAT=
         "[{severity}] [{time},{time_as_nanoseconds}] [{name},{function_name},{file_name}]: {line_number}-{message}"
@@ -538,7 +507,6 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_USE_STDOUT=1
       RCUTILS_COLORIZED_OUTPUT=1
   )
-  ament_add_test_label(test_logging_custom_env mimick)
   if(TARGET test_logging_custom_env)
     target_link_libraries(test_logging_custom_env ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools mimick)
   endif()
@@ -548,7 +516,7 @@ if(BUILD_TESTING)
     set(_output_format
       "${_output_format} [{severity}] [{time},{time_as_nanoseconds}] [{name},{function_name},{file_name}]: {line_number}-{message}")
   endforeach(i)
-  ament_add_gtest(test_logging_custom_env2 test/test_logging_custom_env.cpp
+  rcutils_custom_add_gtest(test_logging_custom_env2 test/test_logging_custom_env.cpp
     ENV
       RCUTILS_CONSOLE_OUTPUT_FORMAT="${_output_format}"
       RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED=0
@@ -556,12 +524,11 @@ if(BUILD_TESTING)
       RCUTILS_LOGGING_USE_STDOUT=0
       RCUTILS_COLORIZED_OUTPUT=0
   )
-  ament_add_test_label(test_logging_custom_env2 mimick)
   if(TARGET test_logging_custom_env2)
     target_link_libraries(test_logging_custom_env2 ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools mimick)
   endif()
 
-  ament_add_gtest(test_logging_bad_env test/test_logging_bad_env.cpp
+  rcutils_custom_add_gtest(test_logging_bad_env test/test_logging_bad_env.cpp
     ENV
       RCUTILS_LOGGING_USE_STDOUT=42
   )
@@ -569,7 +536,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_logging_bad_env ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_logging_bad_env2 test/test_logging_bad_env.cpp
+  rcutils_custom_add_gtest(test_logging_bad_env2 test/test_logging_bad_env.cpp
     ENV
       RCUTILS_COLORIZED_OUTPUT=42
   )
@@ -577,7 +544,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_logging_bad_env2 ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_logging_bad_env3 test/test_logging_bad_env.cpp
+  rcutils_custom_add_gtest(test_logging_bad_env3 test/test_logging_bad_env.cpp
     ENV
       RCUTILS_LOGGING_BUFFERED_STREAM=42
   )
@@ -585,26 +552,23 @@ if(BUILD_TESTING)
     target_link_libraries(test_logging_bad_env3 ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_logging_enable_for
+  rcutils_custom_add_gtest(test_logging_enable_for
     test/test_logging_enable_for.cpp
   )
   if(TARGET test_logging_enable_for)
     target_link_libraries(test_logging_enable_for ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
-  ament_add_gtest(test_logging_console_output_handler
+  rcutils_custom_add_gtest(test_logging_console_output_handler
     test/test_logging_console_output_handler.cpp
   )
   if(TARGET test_logging_console_output_handler)
     target_link_libraries(test_logging_console_output_handler ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools)
   endif()
 
-  ament_add_gtest(test_macros
+  rcutils_custom_add_gtest(test_macros
     test/test_macros.cpp
   )
-  if(TARGET test_macros)
-    target_link_libraries(test_macros ${PROJECT_NAME})
-  endif()
 
   add_performance_test(benchmark_logging test/benchmark/benchmark_logging.cpp)
   if(TARGET benchmark_logging)
@@ -615,11 +579,15 @@ if(BUILD_TESTING)
   if(TARGET benchmark_err_handle)
     target_link_libraries(benchmark_err_handle ${PROJECT_NAME})
   endif()
+
+  if(TARGET test_macros)
+    target_link_libraries(test_macros ${PROJECT_NAME})
+  endif()
 endif()
 
 # Export old-style CMake variables
 ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(${PROJECT_NAME})
+ament_export_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 
 # Export modern CMake targets
 ament_export_targets(${PROJECT_NAME})
