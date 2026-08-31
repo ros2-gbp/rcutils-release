@@ -16,21 +16,29 @@
 
 #include "rcutils/stdatomic_helper.h"
 
-static atomic_int_least64_t g_rcutils_fault_injection_count = ATOMIC_VAR_INIT(-1);
+// The initializer must match the definition of _Atomic in
+// rcutils/stdatomic_helper.h: on MSVC atomics are emulated with a struct
+// (requiring a braced initializer), everywhere else they are real C11
+// atomics (requiring a plain scalar initializer).
+#if defined(_WIN32) && !defined(__MINGW64__)
+static atomic_int_least64_t g_rcutils_fault_injection_count = {-1};
+#else
+static atomic_int_least64_t g_rcutils_fault_injection_count = -1;
+#endif
 
 void rcutils_fault_injection_set_count(int_least64_t count)
 {
   rcutils_atomic_store(&g_rcutils_fault_injection_count, count);
 }
 
-int_least64_t rcutils_fault_injection_get_count()
+int_least64_t rcutils_fault_injection_get_count(void)
 {
   int_least64_t count = 0;
   rcutils_atomic_load(&g_rcutils_fault_injection_count, count);
   return count;
 }
 
-bool rcutils_fault_injection_is_test_complete()
+bool rcutils_fault_injection_is_test_complete(void)
 {
 #ifndef RCUTILS_ENABLE_FAULT_INJECTION
   return true;
@@ -39,7 +47,7 @@ bool rcutils_fault_injection_is_test_complete()
 #endif  // RCUTILS_ENABLE_FAULT_INJECTION
 }
 
-int_least64_t _rcutils_fault_injection_maybe_fail()
+int_least64_t _rcutils_fault_injection_maybe_fail(void)
 {
   bool set_atomic_success = false;
   int_least64_t current_count = rcutils_fault_injection_get_count();

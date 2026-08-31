@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <cinttypes>
+#include <iomanip>
 #include <thread>
 
 #include "osrf_testing_tools_cpp/memory_tools/memory_tools.hpp"
@@ -234,17 +235,7 @@ TEST_F(TestTimeFixture, test_rcutils_raw_steady_time_now) {
 
 #if !defined(_WIN32)
 
-// For mocking purposes
-#if defined(__MACH__)
-#include <mach/clock.h>
-#include <mach/mach.h>
-#define clock_gettime clock_get_time
-#endif
-
-// Tests rcutils_system_time_now() and rcutils_steady_time_now() functions
-// when system clocks misbehave.
 TEST_F(TestTimeFixture, test_rcutils_with_bad_system_clocks) {
-#if !defined (__MACH__)  // as tv_sec is an unsigned integer there
   {
     auto mock = mocking_utils::patch(
       "lib:rcutils", clock_gettime,
@@ -267,7 +258,6 @@ TEST_F(TestTimeFixture, test_rcutils_with_bad_system_clocks) {
     EXPECT_EQ(RCUTILS_RET_ERROR, ret);
     rcutils_reset_error();
   }
-#endif
   {
     auto mock = mocking_utils::patch(
       "lib:rcutils", clock_gettime,
@@ -292,9 +282,6 @@ TEST_F(TestTimeFixture, test_rcutils_with_bad_system_clocks) {
   }
 }
 
-#if defined(__MACH__)
-#undef clock_gettime
-#endif
 #endif  // !defined(_WIN32)
 
 // Tests the rcutils_time_point_value_as_nanoseconds_string() function.
@@ -369,6 +356,12 @@ TEST_F(TestTimeFixture, test_rcutils_time_point_value_as_date_string) {
   // and once with the false one
   ss2 >> std::get_time(&t, "%Y-%b-%d %H:%M:%S");
   ASSERT_TRUE(ss2.fail());
+
+  // Subsecond values should be formatted as milliseconds, including leading zeros.
+  timepoint = RCUTILS_S_TO_NS(1) + RCUTILS_MS_TO_NS(85) + RCUTILS_US_TO_NS(860);
+  ret = rcutils_time_point_value_as_date_string(&timepoint, buffer, sizeof(buffer));
+  EXPECT_EQ(RCUTILS_RET_OK, ret) << rcutils_get_error_string().str;
+  EXPECT_STREQ(".085", buffer + 19);
 
   // nullptr for timepoint
   ret = rcutils_time_point_value_as_date_string(nullptr, buffer, sizeof(buffer));
