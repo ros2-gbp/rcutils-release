@@ -1,4 +1,4 @@
-// Copyright 2023 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string.h>
+/// \file
 
-#include "rcutils/strnlen.h"
+#ifndef RCUTILS__GET_ENV_H_
+#define RCUTILS__GET_ENV_H_
 
-size_t
-rcutils_strnlen(const char * s, size_t maxlen)
-{
-  const char * found = memchr(s, '\0', maxlen);
-  return found ? (size_t)(found - s) : maxlen;
-}
+// TODO(christophebedard) remove this header completely in I-turtle
+
+#ifdef _MSC_VER
+#pragma message ("rcutils/get_env.h has been deprecated, please include rcutils/env.h instead")
+#else
+#warning rcutils/get_env.h has been deprecated, please include rcutils/env.h instead
+#endif
+
+#include "rcutils/env.h"
+
+#endif  // RCUTILS__GET_ENV_H_
