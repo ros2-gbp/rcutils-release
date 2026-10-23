@@ -17,7 +17,7 @@
 #ifndef RCUTILS__TYPES__CHAR_ARRAY_H_
 #define RCUTILS__TYPES__CHAR_ARRAY_H_
 
-#ifdef __cplusplus
+#if __cplusplus
 extern "C"
 {
 #endif
@@ -239,7 +239,7 @@ RCUTILS_WARN_UNUSED
 rcutils_ret_t
 rcutils_char_array_strcpy(rcutils_char_array_t * char_array, const char * src);
 
-#ifdef __cplusplus
+#if __cplusplus
 }
 #endif
 

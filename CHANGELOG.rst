@@ -2,34 +2,24 @@
 Changelog for package rcutils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-7.2.3 (2026-10-23)
+7.1.4 (2026-10-23)
 ------------------
-* Speed up shared library path lookup on macOS (`#609 <https://github.com/ros2/rcutils//issues/609>`_)
-* deleted old-style cmake export variables (`#606 <https://github.com/ros2/rcutils//issues/606>`_)
-* Use the SPDX identifier Apache-2.0 in package.xml license tags (`#604 <https://github.com/ros2/rcutils//issues/604>`_)
-* Add emscripten guards to shared_library.c's dlopen path (`#591 <https://github.com/ros2/rcutils//issues/591>`_)
-* Reset string array size when allocation fails in init (`#593 <https://github.com/ros2/rcutils//issues/593>`_)
-* Contributors: Ekeno Lokwakai, Leo Camus, Maurice Alexander Purnawan, Michael Carroll, Tobias Fischer
+* Fix date_time_with_ms millisecond formatting (`#570 <https://github.com/ros2/rcutils//issues/570>`_) (`#608 <https://github.com/ros2/rcutils//issues/608>`_)
+* Reset string array size when allocation fails in init (`#593 <https://github.com/ros2/rcutils//issues/593>`_) (`#594 <https://github.com/ros2/rcutils//issues/594>`_)
+* Add emscripten guards to shared_library.c's dlopen path (`#591 <https://github.com/ros2/rcutils//issues/591>`_) (`#598 <https://github.com/ros2/rcutils//issues/598>`_)
+* Contributors: mergify[bot]
 
-7.2.2 (2026-08-31)
+7.1.3 (2026-08-31)
 ------------------
-* Remove the bundled gcc stdatomic compatibility header (`#589 <https://github.com/ros2/rcutils/issues/589>`_)
-* an explicit platform split matching the helper header's own condition. (`#587 <https://github.com/ros2/rcutils/issues/587>`_)
-* Normalize extern "C" guards to #ifdef __cplusplus (`#585 <https://github.com/ros2/rcutils/issues/585>`_)
-* Fix date_time_with_ms millisecond formatting (`#570 <https://github.com/ros2/rcutils/issues/570>`_)
-* Added missing headers (`#580 <https://github.com/ros2/rcutils/issues/580>`_)
-* Link rcutils against Threads (`#579 <https://github.com/ros2/rcutils/issues/579>`_)
-* Contributors: Alejandro Hernández Cordero, Mark Jin, Michael Carroll, Tobias Fischer, Tomoya Fujita, zacheryasc
+* an explicit platform split matching the helper header's own condition. (`#587 <https://github.com/ros2/rcutils/issues/587>`_) (`#590 <https://github.com/ros2/rcutils/issues/590>`_)
+* Added missing headers (`#580 <https://github.com/ros2/rcutils/issues/580>`_) (`#581 <https://github.com/ros2/rcutils/issues/581>`_)
+* Contributors: mergify[bot]
 
-7.2.1 (2026-07-02)
+7.1.2 (2026-07-02)
 ------------------
-* move __STDC_WANT_LIB_EXT1_\_ macro to CMakeLists.txt. (`#555 <https://github.com/ros2/rcutils/issues/555>`_)
-* skip libatomic if mac (`#565 <https://github.com/ros2/rcutils/issues/565>`_)
-* address warning: statement with no effect. (`#559 <https://github.com/ros2/rcutils/issues/559>`_)
-* Contributors: Griffin Tabor, Tomoya Fujita
-
-7.2.0 (2026-05-06)
-------------------
+* skip libatomic if mac (`#565 <https://github.com/ros2/rcutils/issues/565>`_) (`#566 <https://github.com/ros2/rcutils/issues/566>`_)
+* address warning: statement with no effect. (`#559 <https://github.com/ros2/rcutils/issues/559>`_) (`#560 <https://github.com/ros2/rcutils/issues/560>`_)
+* Contributors: mergify[bot]
 
 7.1.1 (2026-04-22)
 ------------------
