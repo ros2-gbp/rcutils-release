@@ -56,7 +56,6 @@ TEST(test_split, split) {
   EXPECT_EQ(
     RCUTILS_RET_INVALID_ARGUMENT,
     rcutils_split("Test", '/', rcutils_get_default_allocator(), NULL));
-  rcutils_reset_error();
 
   // Allocating initial string_array fails
   rcutils_allocator_t time_bomb_allocator = get_time_bomb_allocator();
@@ -64,7 +63,6 @@ TEST(test_split, split) {
   EXPECT_EQ(
     RCUTILS_RET_BAD_ALLOC,
     rcutils_split("Test", '/', time_bomb_allocator, &tokens_fail));
-  rcutils_reset_error();
 
   // Allocating string_array->data fails
   set_time_bomb_allocator_calloc_count(time_bomb_allocator, 1);
@@ -72,7 +70,6 @@ TEST(test_split, split) {
   EXPECT_EQ(
     RCUTILS_RET_BAD_ALLOC,
     rcutils_split("Test", '/', time_bomb_allocator, &tokens_fail));
-  rcutils_reset_error();
 
   // Allocating string_array->data[0] fails
   set_time_bomb_allocator_calloc_count(time_bomb_allocator, 1);
@@ -80,7 +77,6 @@ TEST(test_split, split) {
   EXPECT_EQ(
     RCUTILS_RET_BAD_ALLOC,
     rcutils_split("hello/world", '/', time_bomb_allocator, &tokens_fail));
-  rcutils_reset_error();
 
   rcutils_string_array_t tokens0 = test_split("", '/', 0);
   ret = rcutils_string_array_fini(&tokens0);
