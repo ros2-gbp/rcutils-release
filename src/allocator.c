@@ -65,18 +65,12 @@ __default_zero_allocate(size_t number_of_elements, size_t size_of_element, void 
 rcutils_allocator_t
 rcutils_get_zero_initialized_allocator(void)
 {
-  static rcutils_allocator_t zero_allocator = {
-    .allocate = NULL,
-    .deallocate = NULL,
-    .reallocate = NULL,
-    .zero_allocate = NULL,
-    .state = NULL,
-  };
+  static rcutils_allocator_t zero_allocator = {0};
   return zero_allocator;
 }
 
 rcutils_allocator_t
-rcutils_get_default_allocator()
+rcutils_get_default_allocator(void)
 {
   static rcutils_allocator_t default_allocator = {
     .allocate = __default_allocate,
